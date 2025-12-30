@@ -1,0 +1,10 @@
+Mod to make testing loadouts easy!
+
+Adds a handful of commands and configs to help with testing calamity weapons
+
+/reforge - reforges your accessories to the chosen preset
+/summoner - choose from the Summoner testing loadouts!
+/aftermath - Disable boss drops and aftermath on kill. Finally, the Cultist doesn't have to spawn the Celestial Pillars!
+/config - Add your current gear (items only, not reforges) to the chosen class's preset list.
+
+/melee, /ranger, /mage, /rogue - These work like /summoner, but they don't yet have any pre-built presets. You can use them with your own presets and /config, though!

@@ -1,0 +1,148 @@
+using Terraria.ModLoader;
+using Terraria;
+using CalamityMod;
+using CalamityMod.NPCs.Crabulon;
+using IL.Terraria.GameContent.UI.Elements;
+
+namespace TestingEfficiency
+{
+	public class TestingEfficiency : Mod
+	{
+        public bool BossesLocked = false;
+		public bool KingSlimeDead = false;
+        public bool DesertScourgeDead = false;
+        public bool EyeOfCthulhuDead = false;
+        public bool CrabulonDead = false;
+        public bool Evil1Dead = false;
+        public bool Evil2Dead = false;
+        public bool QueenBeeDead = false;
+        public bool DeerclopsDead = false;
+        public bool SkeletronDead = false;
+        public bool SlimeGodDead = false;
+        public bool WallOfFleshDead = false;
+        public bool QueenSlimeDead = false;
+        public bool CryogenDead = false;
+        public bool TwinsDead = false;
+        public bool AquaticScourgeDead = false;
+        public bool DestroyerDead = false;
+        public bool BrimstoneDead = false;
+        public bool PrimeDead = false;
+        public bool CalamitasDead = false;
+        public bool PlanteraDead = false;
+        public bool LeviathanDead = false;
+        public bool AureusDead = false;
+        public bool GolemDead = false;
+        public bool GoliathDead = false;
+        public bool EmpressDead = false;
+        public bool FishronDead = false;
+        public bool RavagerDead = false;
+        public bool CultistDead = false;
+        public bool DeusDead = false;
+        public bool MoonLordDead = false;
+        public bool GuardiansDead = false;
+        public bool DragonfollyDead = false;
+        public bool ProvidenceDead = false;
+        public bool VoidDead = false;
+        public bool SignusDead = false;
+        public bool WeaverDead = false;
+        public bool PolterghastDead = false;
+        public bool OldDukeDead = false;
+        public bool DevourerOfGodsDead = false;
+        public bool YharonDead = false;
+        public bool ExoMechsDead = false;
+        public bool SupremeCalamitasDead = false;
+
+        public void BossLock()
+        {
+            if (BossesLocked == false)
+            {
+                BossesLocked = true;
+                if (NPC.downedSlimeKing) { KingSlimeDead = true; }
+                if (NPC.downedBoss1) { EyeOfCthulhuDead = true; }
+                if (DownedBossSystem.downedDesertScourge) { DesertScourgeDead = true; }
+                if (DownedBossSystem.downedCrabulon) { CrabulonDead = true; }
+                if (NPC.downedBoss2) { Evil1Dead = true; }
+                if (DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator) {Evil2Dead = true; }
+                if (NPC.downedQueenBee) {QueenBeeDead = true; }
+                if (NPC.downedDeerclops) {DeerclopsDead = true; }
+                if (NPC.downedBoss3) {SkeletronDead = true; }
+                if (DownedBossSystem.downedSlimeGod) {SlimeGodDead = true; }
+                if (Main.hardMode) {WallOfFleshDead = true; }
+                if (NPC.downedQueenSlime) {QueenSlimeDead = true; }
+                if (DownedBossSystem.downedCryogen) {CryogenDead = true; }
+                if (NPC.downedMechBoss1) {TwinsDead = true; }
+                if (DownedBossSystem.downedAquaticScourge) {AquaticScourgeDead = true; }
+                if (NPC.downedMechBoss2) {DestroyerDead = true; }
+                if (DownedBossSystem.downedBrimstoneElemental) {BrimstoneDead = true; }
+                if (NPC.downedMechBoss3) {PrimeDead = true; }
+                if (DownedBossSystem.downedCalamitas) {CalamitasDead = true; }
+                if (NPC.downedPlantBoss) {PlanteraDead = true; }
+                if (DownedBossSystem.downedLeviathan) {LeviathanDead = true; }
+                if (DownedBossSystem.downedAstrumAureus) {AureusDead = true; }
+                if (NPC.downedGolemBoss) {GolemDead = true; }
+                if (DownedBossSystem.downedPlaguebringer) {GoliathDead = true; }
+                if (NPC.downedEmpressOfLight) {EmpressDead = true; }
+                if (NPC.downedFishron) {FishronDead = true; }
+                if (DownedBossSystem.downedRavager) {RavagerDead = true; }
+                if (NPC.downedAncientCultist) {CultistDead = true; }
+                if (DownedBossSystem.downedAstrumDeus) {DeusDead = true; }
+                if (NPC.downedMoonlord) {MoonLordDead = true; }
+                if (DownedBossSystem.downedGuardians) {GuardiansDead = true; }
+                if (DownedBossSystem.downedDragonfolly) {DragonfollyDead = true; }
+                if (DownedBossSystem.downedProvidence) {ProvidenceDead = true; }
+                if (DownedBossSystem.downedCeaselessVoid) {VoidDead = true; }
+                if (DownedBossSystem.downedSignus) {SignusDead = true; }
+                if (DownedBossSystem.downedStormWeaver) {WeaverDead = true; }
+                if (DownedBossSystem.downedPolterghast) {PolterghastDead = true; }
+                if (DownedBossSystem.downedBoomerDuke) {OldDukeDead = true; }
+                if (DownedBossSystem.downedDoG) {DevourerOfGodsDead = true; }
+                if (DownedBossSystem.downedYharon) {YharonDead = true; }
+                if (DownedBossSystem.downedExoMechs) {ExoMechsDead = true; }
+                if (DownedBossSystem.downedSCal) {SupremeCalamitasDead = true; }
+            } else {
+                BossesLocked = false;
+                KingSlimeDead = false;
+                DesertScourgeDead = false;
+                EyeOfCthulhuDead = false;
+                Evil1Dead = false;
+                Evil2Dead = false;
+                QueenBeeDead = false;
+                DeerclopsDead = false;
+                SkeletronDead = false;
+                SlimeGodDead = false;
+                WallOfFleshDead = false;
+                QueenSlimeDead = false;
+                CryogenDead = false;
+                TwinsDead = false;
+                AquaticScourgeDead = false;
+                DestroyerDead = false;
+                BrimstoneDead = false;
+                PrimeDead = false;
+                CalamitasDead = false;
+                PlanteraDead = false;
+                LeviathanDead = false;
+                AureusDead = false;
+                GolemDead = false;
+                GoliathDead = false;
+                EmpressDead = false;
+                FishronDead = false;
+                RavagerDead = false;
+                CultistDead = false;
+                DeusDead = false;
+                MoonLordDead = false;
+                GuardiansDead = false;
+                DragonfollyDead = false;
+                ProvidenceDead = false;
+                VoidDead = false;
+                SignusDead = false;
+                WeaverDead = false;
+                PolterghastDead = false;
+                OldDukeDead = false;
+                DevourerOfGodsDead = false;
+                YharonDead = false;
+                ExoMechsDead = false;
+                SupremeCalamitasDead = false;
+            }
+        }
+    }
+}

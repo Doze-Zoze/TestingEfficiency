@@ -1,0 +1,5 @@
+displayName = Doze's Calamity Testing Efficiency (Beta)
+author = dozezoze
+version = 0.8
+modReferences = CalamityMod
+sortAfter = CalamityMod

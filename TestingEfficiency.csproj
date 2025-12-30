@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+  <PropertyGroup>
+    <AssemblyName>TestingEfficiency</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup>
+    <Reference Include="CalamityMod">
+      <HintPath>..\..\ModReader\CalamityMod\CalamityMod.dll</HintPath>
+    </Reference>
+    <Reference Include="SubworldLibrary">
+      <HintPath>..\..\dependencies\SubworldLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="tModLoader">
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\tModLoader\tModLoader.dll</HintPath>
+    </Reference>
+    <Reference Include="ReLogic" />
+  </ItemGroup>
+</Project>
