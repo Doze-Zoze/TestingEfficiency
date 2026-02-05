@@ -22,6 +22,7 @@ using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.VanillaNPCAIOverrides.Bosses;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,7 +31,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
-
+using static TestingEfficiency.dpsSystem;
 namespace TestingEfficiency;
 
 
@@ -40,6 +41,7 @@ public class dpsSystem : ModSystem
     {
         public NPCData(NPC npc) //Sets the type/index/name automatically from a passed NPC
         {
+
             Type = npc.type;
             Index = npc.whoAmI;
             Name = npc.TypeName;
@@ -80,7 +82,44 @@ public class dpsSystem : ModSystem
 
     public static DateTime bossRushTimeRTA;
 
-    public static Dictionary<NPCData, Dictionary<string, int>> dmgdata = new Dictionary<NPCData, Dictionary<string, int>>(); //This is where I store the damage data. the NPCData refers to the NPC, the String refers to the damage source, and the int is the damage amount.
+    public enum DamageSourceType
+    {
+        Projectile,
+        Item,
+        Misc,
+        DoT,
+        Environment
+    }
+
+    public enum DamageSourceOwner
+    {
+        Player,
+        NPC
+    }
+
+    public struct DamageSourceData
+    {
+
+        public DamageSourceData(int playerid, int sourceid, DamageSourceType sourceType)
+        {
+            OwnerID = playerid;
+            SourceID = sourceid;
+            SourceType = sourceType;
+        }
+
+        /// <summary>
+        /// Player.whoAmI
+        /// </summary>
+        public int OwnerID;
+        /// <summary>
+        /// Proctile.type/Item.type
+        /// </summary>
+        public int SourceID;
+        public DamageSourceType SourceType;
+        public DamageSourceOwner OwnerType = DamageSourceOwner.Player;
+    }
+
+    public static Dictionary<NPCData, Dictionary<DamageSourceData, int>> dmgdata = new Dictionary<NPCData, Dictionary<DamageSourceData, int>>(); //This is where I store the damage data. the NPCData refers to the NPC, the String refers to the damage source, and the int is the damage amount.
 
     public static Dictionary<NPCData, Dictionary<string, int>> dotdata = new Dictionary<NPCData, Dictionary<string, int>>();
 
@@ -89,6 +128,42 @@ public class dpsSystem : ModSystem
     public static Texture2D lastPrint = null;
 
     public static string lastIGT = null;
+
+    (string, string, string) ConstructDamageLine(KeyValuePair<DamageSourceData, int> data, int totaldmg)
+    {
+        string owner = "";
+        string source = "";
+        if (data.Key.OwnerID >= 0) {
+            if (data.Key.OwnerType == DamageSourceOwner.Player)
+                owner = Main.player[data.Key.OwnerID].name + "'s ";
+            if (data.Key.OwnerType == DamageSourceOwner.NPC)
+                owner = ContentSamples.NpcsByNetId[data.Key.OwnerID].FullName + "'s ";
+        }
+        switch (data.Key.SourceType)
+        {
+            case DamageSourceType.Projectile:
+                source = ContentSamples.ProjectilesByType[data.Key.SourceID].Name;
+                break;
+
+            case DamageSourceType.Item:
+                source = ContentSamples.ItemsByType[data.Key.SourceID].Name;
+                break;
+
+            case DamageSourceType.DoT:
+                source = "Damage over Time";
+                break;
+
+            case DamageSourceType.Misc:
+                source = "Misc.";
+                break;
+
+            case DamageSourceType.Environment:
+                source = "DoT & Environment";
+                break;
+        }
+        return (owner + source, $"{((float)(data.Value * 100) / totaldmg).ToString("0.00")}%", $"({data.Value} dmg)");
+
+    }
     public override void PostUpdateEverything()
     {
         if (Main.npc.Any(x => x.active && x.boss))
@@ -130,18 +205,18 @@ public class dpsSystem : ModSystem
                     if (CalamityGlobalNPC.BossKillTimes.Keys.Contains(npc.Key.Type))
                         goalTime = (int)MathHelper.Max(goalTime, CalamityGlobalNPC.BossKillTimes[npc.Key.Type]);
                     int totaldmg = 0;
-                    foreach (KeyValuePair<string, int> i in npc.Value.OrderBy(key => key.Value)) //for each damage source, add that damage amount to the total damage counter
+                    foreach (KeyValuePair<DamageSourceData, int> i in npc.Value.OrderBy(key => key.Value)) //for each damage source, add that damage amount to the total damage counter
                     {
-                        //OLD CODE IGNORE output += $"\n{i.Key}: {((float)(i.Value * 100) / npc.lifeMax).ToString("0.00")}% ({i.Value} dmg)";
                         totaldmg += i.Value;
                     }
                     string output = $"[c/78ffa3:{npc.Key.Name}] [c/ababab:({totaldmg} dmg dealt)]"; //Prepare to print out the total damage dealt
                     var fieldvar = new List<webhookmanager.WebhookField> { }; //this is for discord webhook integration, ignore it
-                    foreach (KeyValuePair<string, int> i in npc.Value.OrderBy(key => -key.Value)) //Runs for each damage source, sorted from highest damage dealt to lowest damage deal
+                    foreach (KeyValuePair<DamageSourceData, int> i in npc.Value.OrderBy(key => -key.Value)) //Runs for each damage source, sorted from highest damage dealt to lowest damage deal
                     {
-                        output += $"\n{i.Key}: [c/f7d57e:{((float)(i.Value * 100) / totaldmg).ToString("0.00")}%] [c/ababab:({i.Value} dmg)]"; //Prepare print out the damage source, the % of the total damage from that source, and the actual value of damage from that source
+                        var l = ConstructDamageLine(i, totaldmg);
+                        output += $"\n{l.Item1}: [c/ f7d57e:{l.Item2}] [c/ ababab:{l.Item3}]"; //Prepare print out the damage source, the % of the total damage from that source, and the actual value of damage from that source
                                                                                                                                                //totaldmg += i.Value;
-                        fieldvar.Add(new webhookmanager.WebhookField(i.Key, $"{((float)(i.Value * 100) / totaldmg).ToString("0.00")} % ({i.Value} dmg)", false)); //adds that same info to the webhook
+                        fieldvar.Add(new webhookmanager.WebhookField(l.Item1, $"{l.Item2} {l.Item3}", false)); //adds that same info to the webhook
                     }
 
                     //DoT
@@ -302,24 +377,29 @@ public class dpsSystem : ModSystem
 public class ProjectileSourceManager : GlobalProjectile
 {
     public override bool InstancePerEntity => true;
-    public string ItemName = "";
-    public string ParentName = "";
+    public DamageSourceData sourceData;
     public IEntitySource source = null;
     public override void OnSpawn(Projectile projectile, IEntitySource source)
     {
-        this.source = source;
-        NestedSourceCheck(projectile, source);
+        sourceData = new DamageSourceData(projectile.owner, projectile.type, DamageSourceType.Projectile);
+        if (!FightStatsConfig.Instance.detailedDmgStats)
+        {
+            this.source = source;
+            NestedSourceCheck(projectile, source);
+        }
     }
 
     public void NestedSourceCheck(Projectile projectile, IEntitySource source, int nest = 0)
     {
         if (source is IEntitySource_WithStatsFromItem)
         {
-            ItemName = ((IEntitySource_WithStatsFromItem)source).Item.Name;
+            sourceData.SourceType = DamageSourceType.Item;
+            sourceData.SourceID = ((EntitySource_ItemUse)source).Item.type;
         }
         if (source is EntitySource_ItemUse)
         {
-            ItemName = ((EntitySource_ItemUse)source).Item.Name;
+            sourceData.SourceType = DamageSourceType.Item;
+            sourceData.SourceID = ((EntitySource_ItemUse)source).Item.type;
         }
         if (source is EntitySource_Parent)
         {
@@ -330,11 +410,12 @@ public class ProjectileSourceManager : GlobalProjectile
             }
             if (s is Player)
             {
-                ParentName = (s as Player).name;
+                sourceData.OwnerID = s.whoAmI;
             }
             if (s is NPC)
             {
-                ParentName = (s as NPC).FullName;
+                sourceData.OwnerType = DamageSourceOwner.NPC;
+                sourceData.OwnerID = (s as NPC).type;
             }
         }
     }
@@ -462,21 +543,9 @@ public class damagecalcGlobalNPC : GlobalNPC
     };
 
     public int MiscDamage = 0;
+    public int previousHP = -1; // each NPC has a default value of -1 here so that I can tell they were newly spawned, not just healing from 0 hp to full.
 
     public int[] PlayerMiscDamage = new int[Main.maxPlayers];
-    string GetOwnerName(Projectile projectile)
-    {
-        if (projectile.GetGlobalProjectile<ProjectileSourceManager>().ParentName != "")
-            return projectile.GetGlobalProjectile<ProjectileSourceManager>().ParentName;
-        return Main.player[projectile.owner].name;
-    }
-
-    string GetSourceName(Projectile projectile)
-    {
-        if (!FightStatsConfig.Instance.detailedDmgStats && projectile.GetGlobalProjectile<ProjectileSourceManager>().ItemName != "")
-            return projectile.GetGlobalProjectile<ProjectileSourceManager>().ItemName;
-        return projectile.Name;
-    }
     public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
     {
         foreach (var i in merge)
@@ -514,22 +583,21 @@ public class damagecalcGlobalNPC : GlobalNPC
                     }
                 }
         }
-        //CombatText.NewText(npc.Hitbox, Color.AliceBlue, "!");
         if (merge.Contains(npc.type) && Main.npc.Any(x => x.boss && x.active))
         {
-            int x = 0; //this will be used to store already-existing damage from the same damage source
-            if (!dpsSystem.dmgdata.TryGetValue(new dpsSystem.NPCData(npc.type, -1), out var y)) //check if NPC is already in the array. if it is, "y" becomes the Dictonary<string,int> that stores the damage sources for that NPC. if it isn't in the array, we'll create a new one below.
+            //Try to get the existing damage dictionary for this NPC. if it doesn't exist, create a new one.
+            if (!dmgdata.TryGetValue(new NPCData(npc.type, -1), out var NpcDamageDict)) 
             {
-                y = new Dictionary<string, int> { };
+                NpcDamageDict = new() { };
             }
-            if (y.ContainsKey($"{GetOwnerName(projectile)}'s {GetSourceName(projectile)}")) //Checks if the damage source is already in the damage sources dictionary for that NPC.
-            {
-                y.TryGetValue($"{GetOwnerName(projectile)}'s {GetSourceName(projectile)}", out x); //gets the amount of damage done from this damage source, then...
-                y.Remove($"{GetOwnerName(projectile)}'s {GetSourceName(projectile)}"); // it clears that damage source from the dictionary.
-            }
-            y.Add($"{GetOwnerName(projectile)}'s {GetSourceName(projectile)}", x + (npc.life < 0 ? damageDone + npc.life : damageDone)); //Adds this damage source, in the format of "PlayerName's ProjectileName", to the dict. don't forget to add "x" to the value to keep previous damage from the same source
-            dpsSystem.dmgdata.Remove(new dpsSystem.NPCData(npc.type, -1)); //removes this NPC from the damage data list...
-            dpsSystem.dmgdata.Add(new dpsSystem.NPCData(npc.type, -1), y); //... so we can add it back with the update damage values
+            //Get the DamageSourceData and damage to add for this proj
+            var sourceData = projectile.GetGlobalProjectile<ProjectileSourceManager>().sourceData;
+            int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
+            //Add it to the NPC's dictionary
+            NpcDamageDict[sourceData] += damageToWrite;
+
+            //update the parent dictionary
+            dmgdata[new NPCData(npc.type, -1)] = NpcDamageDict;
 
             npc.GetGlobalNPC<damagecalcGlobalNPC>().previousHP -= damageDone; //updates this NPC's previousHP variable, which I used to calculate debuff/environmental damage sources. if there's a better way to calculate debuffs, tell me plz
             npc.GetGlobalNPC<damagecalcGlobalNPC>().PlayerMiscDamage[Main.player[projectile.owner].whoAmI] -= damageDone; //Also updates the misc dmage
@@ -537,19 +605,23 @@ public class damagecalcGlobalNPC : GlobalNPC
         }
         else if ((npc.boss) && !blacklist.Contains(npc.type))
         {
-            int x = 0; //this will be used to store already-existing damage from the same damage source
-            if (!dpsSystem.dmgdata.TryGetValue(new dpsSystem.NPCData(npc), out var y)) //check if NPC is already in the array. if it is, "y" becomes the Dictonary<string,int> that stores the damage sources for that NPC. if it isn't in the array, we'll create a new one below.
+            //Try to get the existing damage dictionary for this NPC. if it doesn't exist, create a new one.
+            if (!dmgdata.TryGetValue(new NPCData(npc), out var NpcDamageDict))
             {
-                y = new Dictionary<string, int> { };
+                NpcDamageDict = new() { };
             }
-            if (y.ContainsKey($"{GetOwnerName(projectile)}'s {GetSourceName(projectile)}")) //Checks if the damage source is already in the damage sources dictionary for that NPC.
-            {
-                y.TryGetValue($"{GetOwnerName(projectile)}'s {GetSourceName(projectile)}", out x); //gets the amount of damage done from this damage source, then...
-                y.Remove($"{GetOwnerName(projectile)}'s {GetSourceName(projectile)}"); // it clears that damage source from the dictionary.
-            }
-            y.Add($"{GetOwnerName(projectile)}'s {GetSourceName(projectile)}", x + (npc.life < 0 ? damageDone + npc.life : damageDone)); //Adds this damage source, in the format of "PlayerName's ProjectileName", to the dict. don't forget to add "x" to the value to keep previous damage from the same source
-            dpsSystem.dmgdata.Remove(new dpsSystem.NPCData(npc)); //removes this NPC from the damage data list...
-            dpsSystem.dmgdata.Add(new dpsSystem.NPCData(npc), y); //... so we can add it back with the update damage values
+            //Get the DamageSourceData and damage to add for this proj
+            var sourceData = projectile.GetGlobalProjectile<ProjectileSourceManager>().sourceData;
+            int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
+            //Add it to the NPC's dictionary
+            if (!NpcDamageDict.ContainsKey(sourceData))
+                NpcDamageDict[sourceData] = damageToWrite;
+            else
+                NpcDamageDict[sourceData] += damageToWrite;
+
+            //update the parent dictionary
+            dmgdata[new NPCData(npc)] = NpcDamageDict;
+
             npc.GetGlobalNPC<damagecalcGlobalNPC>().previousHP -= damageDone; //updates this NPC's previousHP variable, which I used to calculate debuff/environmental damage sources. if there's a better way to calculate debuffs, tell me plz
             npc.GetGlobalNPC<damagecalcGlobalNPC>().PlayerMiscDamage[Main.player[projectile.owner].whoAmI] -= damageDone; //Also updates the misc dmage
 
@@ -580,61 +652,44 @@ public class damagecalcGlobalNPC : GlobalNPC
         }
         if (replaceList.Keys.Contains(npc.type))
         {
-            //if (merge.Contains(replaceList[npc.type]))
-            //{
             npc = ContentSamples.NpcsByNetId[npc.type];
-            /*}
-            else
-                foreach (var NPC in Main.npc)
-            {
-                if (NPC.type == replaceList[npc.type] && NPC.active)
-                {
-                    npc = NPC;
-                    break;
-                }
-            }*/
         }
         if (merge.Contains(npc.type))
         {
-            int x = 0; //this will be used to store already-existing damage from the same damage source
-            if (!dpsSystem.dmgdata.TryGetValue(new dpsSystem.NPCData(npc.type, -1), out var y)) //check if NPC is already in the array. if it is, "y" becomes the Dictonary<string,int> that stores the damage sources for that NPC. if it isn't in the array, we'll create a new one below.
+            if (!dmgdata.TryGetValue(new NPCData(npc.type, -1), out var NpcDamageDict))
             {
-                y = new Dictionary<string, int> { };
+                NpcDamageDict = new() { };
             }
-            if (y.ContainsKey($"{player.name}'s {item.Name}"))
-            {
-                y.TryGetValue($"{player.name}'s {item.Name}", out x);
-                y.Remove($"{player.name}'s {item.Name}");
-            }
-            y.Add($"{player.name}'s {item.Name}", x + (damageDone > npc.life ? npc.life : damageDone)); //Adds this damage source, in the format of "PlayerName's ProjectileName", to the dict. don't forget to add "x" to the value to keep previous damage from the same source
-            dpsSystem.dmgdata.Remove(new dpsSystem.NPCData(npc.type, -1)); //removes this NPC from the damage data list...
-            dpsSystem.dmgdata.Add(new dpsSystem.NPCData(npc.type, -1), y); //... so we can add it back with the update damage values
-            npc.GetGlobalNPC<damagecalcGlobalNPC>().previousHP -= damageDone; //updates this NPC's previousHP variable, which I used to calculate debuff/environmental damage sources. if there's a better way to calculate debuffs, tell me plz
-            npc.GetGlobalNPC<damagecalcGlobalNPC>().PlayerMiscDamage[player.whoAmI] -= damageDone; //Also updates the misc dmage
+            var sourceData = new DamageSourceData(player.whoAmI, item.type, DamageSourceType.Item);
+            int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
+            if (!NpcDamageDict.ContainsKey(sourceData))
+                NpcDamageDict[sourceData] = damageToWrite;
+            else
+                NpcDamageDict[sourceData] += damageToWrite;
+            dmgdata[new NPCData(npc.type, -1)] = NpcDamageDict;
 
+            npc.GetGlobalNPC<damagecalcGlobalNPC>().previousHP -= damageDone;
+            npc.GetGlobalNPC<damagecalcGlobalNPC>().PlayerMiscDamage[player.whoAmI] -= damageDone;
         }
         else
         if ((npc.boss) && !blacklist.Contains(npc.type))
         {
-            int x = 0;
-            if (!dpsSystem.dmgdata.TryGetValue(new dpsSystem.NPCData(npc), out var y))
+            if (!dmgdata.TryGetValue(new NPCData(npc), out var NpcDamageDict))
             {
-                y = new Dictionary<string, int> { };
+                NpcDamageDict = new() { };
             }
-            if (y.ContainsKey($"{player.name}'s {item.Name}"))
-            {
-                y.TryGetValue($"{player.name}'s {item.Name}", out x);
-                y.Remove($"{player.name}'s {item.Name}");
-            }
-            y.Add($"{player.name}'s {item.Name}", x + (damageDone > npc.life ? npc.life : damageDone));
-            dpsSystem.dmgdata.Remove(new dpsSystem.NPCData(npc));
-            dpsSystem.dmgdata.Add(new dpsSystem.NPCData(npc), y);
-            npc.GetGlobalNPC<damagecalcGlobalNPC>().previousHP = npc.life;
+            var sourceData = new DamageSourceData(player.whoAmI, item.type, DamageSourceType.Item);
+            int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
+            if (!NpcDamageDict.ContainsKey(sourceData))
+                NpcDamageDict[sourceData] = damageToWrite;
+            else
+                NpcDamageDict[sourceData] += damageToWrite;
+            dmgdata[new NPCData(npc)] = NpcDamageDict;
+
+            npc.GetGlobalNPC<damagecalcGlobalNPC>().previousHP -= damageDone;
+            npc.GetGlobalNPC<damagecalcGlobalNPC>().PlayerMiscDamage[player.whoAmI] -= damageDone;
         }
     }
-
-    public Dictionary<string, int> dmg = new Dictionary<string, int>(); //this dict i actually don't think I use anymore. I used this back when I stored all damage data on each NPC instead of in the ModSystem.
-    public int previousHP = -1; // each NPC has a default value of -1 here so that I can tell they were newly spawned, not just healing from 0 hp to full.
     public override void PostAI(NPC npc)
     {
         var isFirst = true;
@@ -662,12 +717,13 @@ public class damagecalcGlobalNPC : GlobalNPC
         if (isFirst && (npc.boss || merge.Contains(npc.type)) && (!blacklist.Contains(npc.type) || !replaceList.Keys.Contains(npc.type)))
         {
             //Calculate dots
+            //This entire system should be redone to match the main damage system.
             if (Main.npc.Any(x => x.boss && x.active))
             {
-                if (!dpsSystem.dotdata.TryGetValue(new dpsSystem.NPCData(npc.type, merge.Contains(npc.type) ? -1 : npc.whoAmI), out var y)) //check if NPC is already in the array. if it is, "y" becomes the Dictonary<string,int> that stores the damage sources for that NPC. if it isn't in the array, we'll create a new one below.
+                if (!dotdata.TryGetValue(new NPCData(npc.type, merge.Contains(npc.type) ? -1 : npc.whoAmI), out var y)) //check if NPC is already in the array. if it is, "y" becomes the Dictonary<string,int> that stores the damage sources for that NPC. if it isn't in the array, we'll create a new one below.
                 {
                     y = new Dictionary<string, int> { };
-                    dpsSystem.dotdata.Add(new dpsSystem.NPCData(npc.type, merge.Contains(npc.type) ? -1 : npc.whoAmI), y);
+                    dotdata.Add(new NPCData(npc.type, merge.Contains(npc.type) ? -1 : npc.whoAmI), y);
                 }
                 foreach (var type in npc.buffType)
                 {
@@ -695,16 +751,15 @@ public class damagecalcGlobalNPC : GlobalNPC
                     npc.lifeRegen = oldRegen;
                     npc.lifeRegenCount = oldCount;
                 }
-                dpsSystem.dotdata.Remove(new dpsSystem.NPCData(npc.type, merge.Contains(npc.type) ? -1 : npc.whoAmI)); //removes this NPC from the damage data list...
-                dpsSystem.dotdata.Add(new dpsSystem.NPCData(npc.type, merge.Contains(npc.type) ? -1 : npc.whoAmI), y); //... so we can add it back with the update damage values
+                dotdata.Remove(new NPCData(npc.type, merge.Contains(npc.type) ? -1 : npc.whoAmI)); //removes this NPC from the damage data list...
+                dotdata.Add(new NPCData(npc.type, merge.Contains(npc.type) ? -1 : npc.whoAmI), y); //... so we can add it back with the update damage values
             }
 
             if (npc.life != previousHP && previousHP != -1) //if their HP is different than it was last tick and last tick it wasn't -1 (aka newly spawned), we'll run this code to log the damage as a "DoT & Environment" damage source. Everything in this IF statement works the same as adding the projectile damage to the Dict, but with a fixed Damage Source string.
             {
-                int x = 0;
-                if (!dpsSystem.dmgdata.TryGetValue(new dpsSystem.NPCData(npc.type, (merge.Contains(npc.type) ? -1 : npc.whoAmI)), out var y))
+                if (!dmgdata.TryGetValue(new NPCData(npc.type, (merge.Contains(npc.type) ? -1 : npc.whoAmI)), out var NpcDamageDict))
                 {
-                    y = new Dictionary<string, int> { };
+                    NpcDamageDict = new() { };
                 }
                 if (PlayerMiscDamage.Sum() > 0)
                 {
@@ -714,14 +769,13 @@ public class damagecalcGlobalNPC : GlobalNPC
                             continue;
                         var damageDone = Math.Min(PlayerMiscDamage[i], Math.Max(0, previousHP - npc.life));
                         var player = Main.player[i];
-                        if (y.ContainsKey($"{player.name}'s Misc.")) //instead of adjusting the damage source based on weapon, we're setting a fixed damage here since most of the time this damage is from DoT or traps. some things, like Shield of Cthulhu, do fall in here too tho
-                        {
-                            y.TryGetValue($"{player.name}'s Misc.", out x);
-                            y.Remove($"{player.name}'s Misc.");
-                        }
-                        y.Add($"{player.name}'s Misc.", x + damageDone);
-                        dpsSystem.dmgdata.Remove(new dpsSystem.NPCData(npc.type, (npc.type == ModContent.NPCType<AstrumDeusHead>() ? -1 : npc.whoAmI)));
-                        dpsSystem.dmgdata.Add(new dpsSystem.NPCData(npc.type, (npc.type == ModContent.NPCType<AstrumDeusHead>() ? -1 : npc.whoAmI)), y);
+                        var sourceData = new DamageSourceData(player.whoAmI, -1, DamageSourceType.Misc);
+                        int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
+                        if (!NpcDamageDict.ContainsKey(sourceData))
+                            NpcDamageDict[sourceData] = damageToWrite;
+                        else
+                            NpcDamageDict[sourceData] += damageToWrite;
+                        dmgdata[new NPCData(npc.type, (merge.Contains(npc.type) ? -1 : npc.whoAmI))] = NpcDamageDict;
                         previousHP -= damageDone;
                         PlayerMiscDamage[i] = 0;
                     }
@@ -729,44 +783,25 @@ public class damagecalcGlobalNPC : GlobalNPC
                 var misc = Math.Min(MiscDamage, Math.Max(0, previousHP - npc.life));
                 if (misc > 0)
                 {
-                    if (y.ContainsKey("Misc.")) //instead of adjusting the damage source based on weapon, we're setting a fixed damage here since most of the time this damage is from DoT or traps. some things, like Shield of Cthulhu, do fall in here too tho
-                    {
-                        y.TryGetValue("Misc.", out x);
-                        y.Remove("Misc.");
-                    }
-                    y.Add("Misc.", x + misc);
-                    dpsSystem.dmgdata.Remove(new dpsSystem.NPCData(npc.type, (npc.type == ModContent.NPCType<AstrumDeusHead>() ? -1 : npc.whoAmI)));
-                    dpsSystem.dmgdata.Add(new dpsSystem.NPCData(npc.type, (npc.type == ModContent.NPCType<AstrumDeusHead>() ? -1 : npc.whoAmI)), y);
+                    var sourceData = new DamageSourceData(-1, -1, DamageSourceType.Misc);
+                    if (!NpcDamageDict.ContainsKey(sourceData))
+                        NpcDamageDict[sourceData] = misc;
+                    else
+                        NpcDamageDict[sourceData] += misc;
                     previousHP -= misc;
                     MiscDamage = 0;
                 }
-
-                x = 0;
                 if (npc.life != previousHP)
                 {
-                    if (y.ContainsKey("DoT & Environment")) //instead of adjusting the damage source based on weapon, we're setting a fixed damage here since most of the time this damage is from DoT or traps. some things, like Shield of Cthulhu, do fall in here too tho
-                    {
-                        y.TryGetValue("DoT & Environment", out x);
-                        y.Remove("DoT & Environment");
-                    }
-                    y.Add("DoT & Environment", x + (previousHP - npc.life));
-                    dpsSystem.dmgdata.Remove(new dpsSystem.NPCData(npc.type, (npc.type == ModContent.NPCType<AstrumDeusHead>() ? -1 : npc.whoAmI)));
-                    dpsSystem.dmgdata.Add(new dpsSystem.NPCData(npc.type, (npc.type == ModContent.NPCType<AstrumDeusHead>() ? -1 : npc.whoAmI)), y);
+                    var sourceData = new DamageSourceData(-1, -1, DamageSourceType.Environment);
+                    if (!NpcDamageDict.ContainsKey(sourceData))
+                        NpcDamageDict[sourceData] = previousHP - npc.life;
+                    else
+                        NpcDamageDict[sourceData] += previousHP - npc.life;
                 }
 
             }
-            previousHP = npc.life; //update the previousHP for next frame
-            /*
-            OLD DEBUG CODE IGNORE
-            if (Main.time % 60 == 0)
-            {
-                string output = npc.FullName;
-                foreach (KeyValuePair<string, int> i in dmg)
-                {
-                    output += $"\n{i.Key}: {i.Value}";
-                }
-                Main.NewText(output);
-            }*/
+            previousHP = npc.life;
         }
     }
 }
