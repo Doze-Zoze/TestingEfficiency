@@ -36,7 +36,7 @@ public class configCmd : ModCommand
         
 	}
 
-	public static void Save(Player player, string[] args)
+	public static List<string> Save(Player player, string[] args)
 	{
         List<string> loadout = new List<string>();
         for (int i = 0; i < 20; i++)
@@ -103,7 +103,7 @@ public class configCmd : ModCommand
         if ((object)saveMethodInfo != null)
         {
             saveMethodInfo.Invoke(null, new object[1] { TestingLoadouts.Instance });
-            return;
+            return loadout;
         }
         throw new Exception("A file could not be created, or updated at:\n'{path}'\n\n If you ARE using Onedrive, please reinstall tModloader in a different location.\n If you ARE NOT using Onedrive, please disable Windows Real-Time protection.");
     }

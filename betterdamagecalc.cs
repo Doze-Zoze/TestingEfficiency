@@ -594,7 +594,10 @@ public class damagecalcGlobalNPC : GlobalNPC
             var sourceData = projectile.GetGlobalProjectile<ProjectileSourceManager>().sourceData;
             int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
             //Add it to the NPC's dictionary
-            NpcDamageDict[sourceData] += damageToWrite;
+            if (NpcDamageDict.ContainsKey(sourceData))
+                NpcDamageDict[sourceData] += damageToWrite;
+            else
+                NpcDamageDict[sourceData] = damageToWrite;
 
             //update the parent dictionary
             dmgdata[new NPCData(npc.type, -1)] = NpcDamageDict;

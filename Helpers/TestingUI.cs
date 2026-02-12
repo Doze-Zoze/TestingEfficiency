@@ -2,7 +2,6 @@
 using CalamityMod.Items.Accessories;
 using CalamityMod.Items.PermanentBoosters;
 using CalamityMod.Items.SummonItems;
-using CalamityMod.Items.Tools;
 using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.AstrumAureus;
 using CalamityMod.NPCs.AstrumDeus;
@@ -124,6 +123,7 @@ namespace TestingEfficiency.Helpers
         #endregion
         public override void OnInitialize()
         {
+            Main.instance.LoadItem(ItemID.GoblinTech);
             OpenMenuButton.image = (TextureAssets.Item[ItemID.GoblinTech]);
             OpenMenuButton.Left.Set(0, 0.75f);
             OpenMenuButton.Top.Set(16, 0);
@@ -144,7 +144,7 @@ namespace TestingEfficiency.Helpers
             MainMenuPanel.Top.Set(16, 0);
             MainMenuPanel.Left.Set(-(MainMenuPanel.Width.Pixels + 4), 0.75f);
 
-
+            Main.instance.LoadItem(ItemID.LifeCrystal);
             PermanentUpgradeMenuButton.image = (TextureAssets.Item[ItemID.LifeCrystal]);
             PermanentUpgradeMenuButton.activePredicate = () => Children.Contains(PermanentUpgradePanel);
             PermanentUpgradeMenuButton.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
@@ -153,6 +153,7 @@ namespace TestingEfficiency.Helpers
             };
             MainMenuPanel.Append(PermanentUpgradeMenuButton);
 
+            Main.instance.LoadItem(ItemID.SuspiciousLookingEye);
             BossToggleMenuButton.image = (TextureAssets.Item[ItemID.SuspiciousLookingEye]);
             BossToggleMenuButton.Top = new(48 + MainMenuPanel.MarginTop + 4, 0);
             BossToggleMenuButton.activePredicate = () => Children.Contains(BossTogglePanel);
@@ -162,6 +163,7 @@ namespace TestingEfficiency.Helpers
             };
             MainMenuPanel.Append(BossToggleMenuButton);
 
+            Main.instance.LoadItem(ItemID.CopperShortsword);
             LoadoutMenuButton.image = (TextureAssets.Item[ItemID.CopperShortsword]);
             LoadoutMenuButton.Top = new(52 * 2 + MainMenuPanel.MarginTop, 0);
             LoadoutMenuButton.activePredicate = () => Children.Contains(LoadoutPanel);
@@ -171,6 +173,7 @@ namespace TestingEfficiency.Helpers
             };
             MainMenuPanel.Append(LoadoutMenuButton);
 
+            Main.instance.LoadItem(ItemID.DPSMeter);
             DPSMenuButton.image = (TextureAssets.Item[ItemID.DPSMeter]);
             DPSMenuButton.Top = new(52 * 3 + MainMenuPanel.MarginTop, 0);
             DPSMenuButton.activePredicate = () => Children.Contains(DPSPaned);
@@ -253,13 +256,13 @@ namespace TestingEfficiency.Helpers
             if (!Children.Contains(time))
                 Append(time);
 
-            Width.Set(400,0);
+            Width.Set(400, 0);
             time.Height.Set(170, 0);
             time.Width.Set(170, 0);
             time.HAlign = 0;
             time.text.VAlign = 0;
-            time.Top.Set(100+12, 0);
-            Height.Set(320,0);
+            time.Top.Set(100 + 12, 0);
+            Height.Set(320, 0);
             Top.Set(16, 0);
             Left.Set(-(Width.Pixels + 48 + PaddingLeft * 2 + 8), 0.75f);
             graph.SetPadding(PaddingTop);
@@ -278,7 +281,7 @@ namespace TestingEfficiency.Helpers
 
         public BossHealthGraph()
         {
-            Width.Set(0,1);
+            Width.Set(0, 1);
             Height.Set(100, 0);
             BackgroundColor = new Color(52, 66, 119);
         }
@@ -337,66 +340,56 @@ namespace TestingEfficiency.Helpers
         UIScrollbar scrollbar = new();
 
         int active = -1;
-
+        Dictionary<string, List<string>> currentClassLoadouts = new();
         public override void OnInitialize()
         {
+            Main.instance.LoadItem(ItemID.WarriorEmblem);
             melee.image = TextureAssets.Item[ItemID.WarriorEmblem];
             melee.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
             {
-                loadouts.Clear();
-                foreach (var item in TestingLoadouts.Instance.meleeLoadouts)
-                {
-                    loadouts.Add(new LoadoutToPick(item));
-                }
+                currentClassLoadouts = TestingLoadouts.Instance.meleeLoadouts;
+                refreshSearch();
                 active = 0;
             };
             melee.activePredicate = () => active == 0;
 
             ranged.Left.Set(52 * (1), 0);
+            Main.instance.LoadItem(ItemID.RangerEmblem);
             ranged.image = TextureAssets.Item[ItemID.RangerEmblem];
             ranged.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
             {
-                loadouts.Clear();
-                foreach (var item in TestingLoadouts.Instance.rangerLoadouts)
-                {
-                    loadouts.Add(new LoadoutToPick(item));
-                }
+                currentClassLoadouts = TestingLoadouts.Instance.rangerLoadouts;
+                refreshSearch();
                 active = 1;
             };
             ranged.activePredicate = () => active == 1;
             magic.Left.Set(52 * (2), 0);
+            Main.instance.LoadItem(ItemID.SorcererEmblem);
             magic.image = TextureAssets.Item[ItemID.SorcererEmblem];
             magic.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
             {
-                loadouts.Clear();
-                foreach (var item in TestingLoadouts.Instance.mageLoadouts)
-                {
-                    loadouts.Add(new LoadoutToPick(item));
-                }
+                currentClassLoadouts = TestingLoadouts.Instance.mageLoadouts;
+                refreshSearch();
                 active = 2;
             };
             magic.activePredicate = () => active == 2;
             summon.Left.Set(52 * (3), 0);
+            Main.instance.LoadItem(ItemID.SummonerEmblem);
             summon.image = TextureAssets.Item[ItemID.SummonerEmblem];
             summon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
             {
-                loadouts.Clear();
-                foreach (var item in TestingLoadouts.Instance.summonerLoadouts)
-                {
-                    loadouts.Add(new LoadoutToPick(item));
-                }
+                currentClassLoadouts = TestingLoadouts.Instance.summonerLoadouts;
+                refreshSearch();
                 active = 3;
             };
             summon.activePredicate = () => active == 3;
             rogue.Left.Set(52 * (4), 0);
+            Main.instance.LoadItem(ModContent.ItemType<RogueEmblem>());
             rogue.image = TextureAssets.Item[ModContent.ItemType<RogueEmblem>()];
             rogue.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
             {
-                loadouts.Clear();
-                foreach (var item in TestingLoadouts.Instance.rogueLoadouts)
-                {
-                    loadouts.Add(new LoadoutToPick(item));
-                }
+                currentClassLoadouts = TestingLoadouts.Instance.rogueLoadouts;
+                refreshSearch();
                 active = 4;
             };
             rogue.activePredicate = () => active == 4;
@@ -404,7 +397,7 @@ namespace TestingEfficiency.Helpers
 
             loadouts.Top.Set(52, 0);
             loadouts.Width.Set(0, 1);
-            loadouts.Height.Set(-52, 1);
+            loadouts.Height.Set(-52 * 2, 1);
             loadouts.SetScrollbar(scrollbar);
 
             Append(melee);
@@ -418,10 +411,11 @@ namespace TestingEfficiency.Helpers
             addInput.Width.Set(-52, 1);
             addInput.Top.Set(52 + 45 * 5, 0);
             addInput.Left.Set(52, 0);
+            addInput.addInput.OnContentsChanged += (_) => refreshSearch();
             Append(addInput);
 
             addNew.Top.Set(52 + 45 * 5, 0);
-            addNew.image = TextureAssets.Camera[1];
+            addNew.image = TextureAssets.Cursors[16];
             addNew.activePredicate = () =>
             {
                 return active != -1 && addInput.searchBarText != "";
@@ -433,27 +427,27 @@ namespace TestingEfficiency.Helpers
                     switch (active)
                     {
                         case 0:
-                            configCmd.Save(Main.LocalPlayer, ["melee", addInput.searchBarText]);
-                            melee.LeftClick(evt);
+                            currentClassLoadouts[addInput.searchBarText] = configCmd.Save(Main.LocalPlayer, ["melee", addInput.searchBarText]);
+                            refreshSearch();
                             break;
                         case 1:
-                            configCmd.Save(Main.LocalPlayer, ["ranger", addInput.searchBarText]);
-                            ranged.LeftClick(evt);
+                            currentClassLoadouts[addInput.searchBarText] = configCmd.Save(Main.LocalPlayer, ["ranger", addInput.searchBarText]);
+                            refreshSearch();
                             break;
                         case 2:
-                            configCmd.Save(Main.LocalPlayer, ["mage", addInput.searchBarText]);
-                            magic.LeftClick(evt);
+                            currentClassLoadouts[addInput.searchBarText] = configCmd.Save(Main.LocalPlayer, ["mage", addInput.searchBarText]);
+                            refreshSearch();
                             break;
                         case 3:
-                            configCmd.Save(Main.LocalPlayer, ["summoner", addInput.searchBarText]);
-                            summon.LeftClick(evt);
+                            currentClassLoadouts[addInput.searchBarText] = configCmd.Save(Main.LocalPlayer, ["summoner", addInput.searchBarText]);
+                            refreshSearch();
                             break;
                         case 4:
-                            configCmd.Save(Main.LocalPlayer, ["rogue", addInput.searchBarText]);
-                            rogue.LeftClick(evt);
+                            currentClassLoadouts[addInput.searchBarText] = configCmd.Save(Main.LocalPlayer, ["rogue", addInput.searchBarText]);
+                            refreshSearch();
                             break;
                     }
-
+                    refreshSearch();
                 }
             };
             Append(addNew);
@@ -466,6 +460,16 @@ namespace TestingEfficiency.Helpers
             initialized = true;
         }
 
+        void refreshSearch()
+        {
+            loadouts.Clear();
+            foreach (var item in currentClassLoadouts)
+            {
+                if (addInput.searchBarText == "" || item.Value.Any(x => x.ToLower().Contains(addInput.searchBarText.ToLower())))
+                    loadouts.Add(new LoadoutToPick(item));
+            }
+        }
+        bool fals = false;
         public override void Update(GameTime gameTime)
         {
             if (!initialized)
@@ -477,8 +481,6 @@ namespace TestingEfficiency.Helpers
                     item.Initialize();
                 }
             }
-
-            addInput.Height.Set(48, 0);
 
             foreach (var item in Children)
             {
@@ -582,6 +584,7 @@ namespace TestingEfficiency.Helpers
             LifeIcon.drawBG = false;
             LifeIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.playerLifeTotal += Helpers.playerLifeTotal >= 600 ? -500 : Helpers.playerLifeTotal >= 500 ? 25 : Helpers.playerLifeTotal >= 400 ? 100 : 300;
             LifeIcon.image = TextureAssets.Item[ItemID.LifeCrystal];
+            Main.instance.LoadItem(ItemID.LifeCrystal);
 
             LifeSlider.Left.Set(32, 0f);
             LifeSlider.Width.Set(-32, 1f);
@@ -597,6 +600,7 @@ namespace TestingEfficiency.Helpers
             ManaIcon.drawBG = false;
             ManaIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.playerManaTotal += Helpers.playerManaTotal >= 350 ? -330 : Helpers.playerManaTotal >= 200 ? 50 : 180;
             ManaIcon.image = TextureAssets.Item[ItemID.ManaCrystal];
+            Main.instance.LoadItem(ItemID.ManaCrystal);
 
 
             ManaSlider.Left.Set((32), 0f);
@@ -614,6 +618,7 @@ namespace TestingEfficiency.Helpers
             RageIcon.drawBG = false;
             RageIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.rageBoostUsed += (Helpers.rageBoostUsed < 3 ? 1 : -3);
             RageIcon.image = TextureAssets.Item[ModContent.ItemType<MushroomPlasmaRoot>()];
+            Main.instance.LoadItem(ModContent.ItemType<MushroomPlasmaRoot>());
 
             RageSlider.Left.Set((32), 0f);
             RageSlider.Width.Set(-32, 1f);
@@ -633,6 +638,7 @@ namespace TestingEfficiency.Helpers
             AdrenIcon.drawBG = false;
             AdrenIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.adrenBoostUsed += (Helpers.adrenBoostUsed < 3 ? 1 : -3);
             AdrenIcon.image = TextureAssets.Item[ModContent.ItemType<ElectrolyteGelPack>()];
+            Main.instance.LoadItem(ModContent.ItemType<ElectrolyteGelPack>());
 
             AdrenSlider.Left.Set((32), 0f);
             AdrenSlider.Width.Set(-32, 1f);
@@ -648,51 +654,63 @@ namespace TestingEfficiency.Helpers
             #endregion
 
             #region toggles
+            Main.instance.LoadItem(ItemID.AegisCrystal);
             VitalCrystalIcon.image = TextureAssets.Item[ItemID.AegisCrystal];
             VitalCrystalIcon.activePredicate = () => Main.LocalPlayer.usedAegisCrystal;
             VitalCrystalIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.usedAegisCrystal.Invert();
 
+            Main.instance.LoadItem(ItemID.AegisFruit);
             AegisFruitIcon.image = TextureAssets.Item[ItemID.AegisFruit];
             AegisFruitIcon.activePredicate = () => Main.LocalPlayer.usedAegisFruit;
             AegisFruitIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.usedAegisFruit.Invert();
 
+            Main.instance.LoadItem(ItemID.ArcaneCrystal);
             ArcaneCrystalIcon.image = TextureAssets.Item[ItemID.ArcaneCrystal];
             ArcaneCrystalIcon.activePredicate = () => Main.LocalPlayer.usedArcaneCrystal;
             ArcaneCrystalIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.usedArcaneCrystal.Invert();
 
+            Main.instance.LoadItem(ItemID.GalaxyPearl);
             GalaxyPearlIcon.image = TextureAssets.Item[ItemID.GalaxyPearl];
             GalaxyPearlIcon.activePredicate = () => Main.LocalPlayer.usedGalaxyPearl;
             GalaxyPearlIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.usedGalaxyPearl.Invert();
 
+            Main.instance.LoadItem(ItemID.Ambrosia);
             AmbrosiaIcon.image = TextureAssets.Item[ItemID.Ambrosia];
             AmbrosiaIcon.activePredicate = () => Main.LocalPlayer.usedAmbrosia;
             AmbrosiaIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.usedAmbrosia.Invert();
 
+            Main.instance.LoadItem(ItemID.GummyWorm);
             GummyWormIcon.image = TextureAssets.Item[ItemID.GummyWorm];
             GummyWormIcon.activePredicate = () => Main.LocalPlayer.usedGummyWorm;
             GummyWormIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.usedGummyWorm.Invert();
 
+            Main.instance.LoadItem(ItemID.PeddlersSatchel);
             PeddlersSatchelIcon.image = TextureAssets.Item[ItemID.PeddlersSatchel];
             PeddlersSatchelIcon.activePredicate = () => NPC.peddlersSatchelWasUsed;
             PeddlersSatchelIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.peddlersSatchelWasUsed.Invert();
 
+            Main.instance.LoadItem(ItemID.ArtisanLoaf);
             ArtisanLoafIcon.image = TextureAssets.Item[ItemID.ArtisanLoaf];
             ArtisanLoafIcon.activePredicate = () => Main.LocalPlayer.ateArtisanBread;
             ArtisanLoafIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.ateArtisanBread.Invert();
 
+            Main.instance.LoadItem(ItemID.DemonHeart);
             DemonHeartIcon.image = TextureAssets.Item[ItemID.DemonHeart];
             DemonHeartIcon.activePredicate = () => Main.LocalPlayer.extraAccessory;
             DemonHeartIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.extraAccessory.Invert();
 
+            Main.instance.LoadItem(ModContent.ItemType<CelestialOnion>());
             CelestialOnionIcon.image = TextureAssets.Item[ModContent.ItemType<CelestialOnion>()];
             CelestialOnionIcon.activePredicate = () => Main.LocalPlayer.Calamity().extraAccessoryML;
             CelestialOnionIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.Calamity().extraAccessoryML.Invert();
             CelestialOnionIcon.SetPadding(6);
 
+            Main.instance.LoadItem(ItemID.CombatBook);
             AdvancedCombatIcon.image = TextureAssets.Item[ItemID.CombatBook];
             AdvancedCombatIcon.activePredicate = () => NPC.combatBookWasUsed;
             AdvancedCombatIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.combatBookWasUsed.Invert();
 
+            Main.instance.LoadItem(ItemID.CombatBookVolumeTwo);
             AdvancedCombat2Icon.image = TextureAssets.Item[ItemID.CombatBookVolumeTwo];
             AdvancedCombat2Icon.activePredicate = () => NPC.combatBookVolumeTwoWasUsed;
             AdvancedCombat2Icon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.combatBookVolumeTwoWasUsed.Invert();
@@ -1184,7 +1202,7 @@ namespace TestingEfficiency.Helpers
     public class UITextInput : UIPanel
     {
 
-        UISearchBar addInput = new(Language.GetText("TestingEfficiency.GUI.Loadouts.SearchText"), 1);
+        public UISearchBar addInput = new(Language.GetText("Mods.TestingEfficiency.GUI.Loadouts.SearchText"), 1);
 
         public string searchBarText = "";
         public override void OnInitialize()
@@ -1197,6 +1215,13 @@ namespace TestingEfficiency.Helpers
             addInput.OnEndTakingInput += OnEndTakingInput;
             addInput.OnNeedingVirtualKeyboard += OpenVirtualKeyboardWhenNeeded;
             addInput.OnCanceledTakingInput += OnCanceledInput;
+
+            addInput.IgnoresMouseInteraction = true;
+            OnLeftClick += (evt, listen) =>
+            {
+                addInput.ToggleTakingText();
+            };
+            Append(addInput);
         }
         private void OnSearchContentsChanged(string contents)
         {
@@ -1205,6 +1230,7 @@ namespace TestingEfficiency.Helpers
 
         private void OnStartTakingInput()
         {
+            addInput.SetContents(searchBarText);
             BorderColor = Main.OurFavoriteColor;
         }
 

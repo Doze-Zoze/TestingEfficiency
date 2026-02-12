@@ -102,7 +102,7 @@ Configs: {
 			Label: Damage Variation Amount
 			Tooltip:
 				'''
-				Changes Damage Spread, when 'Enable Changin Damage Spread' is enabled.
+				Changes Damage Spread, when 'Enable Changing Damage Spread' is enabled.
 				Calamity default is 5%
 				Vanilla default is 15%
 				'''
