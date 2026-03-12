@@ -28,6 +28,7 @@ using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.NPCs.StormWeaver;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
+using Microsoft.CodeAnalysis;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -218,8 +219,14 @@ namespace TestingEfficiency.Helpers
         bool initialized = false;
 
         public BossHealthGraph graph = new();
+        public PlayerHealthGraph playerGraph = new();
 
         public UIBasicTextbox time = new();
+        public UIBasicTextbox splits = new();
+
+
+        UIList Outputs = new();
+        UIScrollbar scrollbar = new();
 
         public override void OnInitialize()
         {
@@ -227,12 +234,29 @@ namespace TestingEfficiency.Helpers
             Height.Set(52 * 2 + 45 * 5 + 24, 0);
             Top.Set(16, 0);
             Left.Set(-(Width.Pixels + 48 + PaddingLeft * 2 + 8), 0.75f);
-            Append(graph);
+            //Append(graph);
+            //Append(playerGraph);
+            graph.SetPadding(PaddingTop);
+            graph.BackgroundColor = new Color(52, 66, 119);
+
+            playerGraph.SetPadding(PaddingTop);
+            playerGraph.BackgroundColor = new Color(52, 66, 119);
 
             time.textToUse = () => dpsSystem.lastIGT ?? "";
-            time.Top.Set(120, 0);
             time.Width.Set(0, 1);
-            time.Height.Set(24, 0);
+
+            splits.Width.Set(0, 1);
+            splits.textToUse = () => dpsSystem.lastSplits ?? "";
+
+            Outputs.Width.Set(0, 1);
+            Outputs.Height.Set(0, 1);
+            Outputs.SetScrollbar(scrollbar);
+
+            Append(Outputs);
+            Outputs.Add(graph);
+            Outputs.Add(playerGraph);
+            Outputs.Add(time);
+            Outputs.Add(splits);
             initialized = true;
         }
 
@@ -253,20 +277,56 @@ namespace TestingEfficiency.Helpers
                 item.Update(gameTime);
             }
 
-            if (!Children.Contains(time))
-                Append(time);
+            Outputs.Clear();
 
+            Outputs.Add(graph);
+            Outputs.Add(playerGraph);
+            if (time.textToUse.Invoke() != string.Empty)
+                Outputs.Add(time);
+            if (splits.textToUse.Invoke() != string.Empty)
+                Outputs.Add(splits);
+
+            var goalWidth = 200f;
+            var goalHeight = 0f;
+            foreach (var item in Outputs)
+            {
+                if (item is UIBasicTextbox)
+                {
+                    var bt = (item as UIBasicTextbox);
+                    goalWidth = Math.Max(goalWidth, FontAssets.MouseText.Value.MeasureString(bt.textToUse.Invoke()).X - 140);
+                }
+                goalHeight += item.GetOuterDimensions().Height + 12;
+            }
+            Width.Set(goalWidth, 0);
+
+
+
+            Height.Set(goalHeight, 0);
+            MaxWidth.Set(0, 0.5f);
+            MaxHeight.Set(-32, 1f);
+            Top.Set(16, 0);
+            var calcWidth = GetOuterDimensions();
+            Left.Set(-(calcWidth.Width + 48 + PaddingLeft * 2 + 8), 0.75f);
+            return;
+            //if (!Children.Contains(time))
+            //    Append(time);
+
+            if (!Children.Contains(Outputs))
+            {
+                Outputs.SetPadding(0);
+            }
+            return;
             Width.Set(400, 0);
-            time.Height.Set(170, 0);
+            //time.Height.Set(170, 0);
             time.Width.Set(170, 0);
             time.HAlign = 0;
             time.text.VAlign = 0;
-            time.Top.Set(100 + 12, 0);
-            Height.Set(320, 0);
+            time.Top.Set(264, 0);
+            Height.Set(458, 0);
             Top.Set(16, 0);
             Left.Set(-(Width.Pixels + 48 + PaddingLeft * 2 + 8), 0.75f);
-            graph.SetPadding(PaddingTop);
-            graph.BackgroundColor = new Color(52, 66, 119);
+
+            playerGraph.Top.Set(132, 0);
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
@@ -278,22 +338,51 @@ namespace TestingEfficiency.Helpers
     {
 
         bool initialized = false;
+        UIText BossText = new("Boss HP Graph", 0.8f);
 
         public BossHealthGraph()
         {
+            Append(BossText);
             Width.Set(0, 1);
-            Height.Set(100, 0);
+            Height.Set(120, 0);
             BackgroundColor = new Color(52, 66, 119);
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
             base.DrawSelf(spriteBatch);
-
             var dim = GetInnerDimensions().ToRectangle();
-            if (dpsSystem.lastPrint is not null)
+            dim.Height -= 20;
+            dim.Y += 20;
+            if (dpsSystem.LastBossHPGraph is not null)
             {
-                spriteBatch.Draw(dpsSystem.lastPrint, dim, Color.White);
+                spriteBatch.Draw(dpsSystem.LastBossHPGraph, dim, Color.White);
+            }
+        }
+    }
+    public class PlayerHealthGraph : UIPanel
+    {
+
+        bool initialized = false;
+        UIText text = new("Player HP Graph", 0.8f);
+
+        public PlayerHealthGraph()
+        {
+            Width.Set(0, 1);
+            Height.Set(120, 0);
+            BackgroundColor = new Color(52, 66, 119);
+            Append(text);
+        }
+
+        protected override void DrawSelf(SpriteBatch spriteBatch)
+        {
+            base.DrawSelf(spriteBatch);
+            var dim = GetInnerDimensions().ToRectangle();
+            dim.Height -= 20;
+            dim.Y += 20;
+            if (dpsSystem.LastPlayerHPGraph is not null)
+            {
+                spriteBatch.Draw(dpsSystem.LastPlayerHPGraph, dim, Color.White);
             }
         }
     }
@@ -320,7 +409,17 @@ namespace TestingEfficiency.Helpers
             if (textToUse is not null)
             {
                 text.SetText(textToUse.Invoke());
+                var t = FontAssets.MouseText.Value.MeasureString(textToUse.Invoke());
+                Height.Set(t.Y + 12, 0);
+
             }
+            SetPadding(12);
+            text.Width.Set(0, 1);
+            text.Height.Set(0, 1);
+            text.HAlign = 0;
+            text.VAlign = 0;
+            text.TextOriginY = 0;
+            text.TextOriginX = 0;
         }
     }
     public class Loadouts : UIPanel

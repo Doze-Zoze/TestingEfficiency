@@ -19,13 +19,10 @@ using CalamityMod.NPCs.Ravager;
 using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.NPCs.StormWeaver;
 using CalamityMod.NPCs.SupremeCalamitas;
-using CalamityMod.NPCs.VanillaNPCAIOverrides.Bosses;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Terraria;
 using Terraria.DataStructures;
@@ -123,17 +120,23 @@ public class dpsSystem : ModSystem
 
     public static Dictionary<NPCData, Dictionary<string, int>> dotdata = new Dictionary<NPCData, Dictionary<string, int>>();
 
-    public static List<int> HPGraphList = new List<int>();
+    public static List<int> HPGraphList_Boss = new List<int>();
+    public static List<int> HPGraphList_Player = new List<int>();
+    public static int MaxHPGraph_Player = 0;
 
-    public static Texture2D lastPrint = null;
+    public static Texture2D LastBossHPGraph = null;
+    public static Texture2D LastPlayerHPGraph = null;
 
     public static string lastIGT = null;
+
+    public static string lastSplits = null;
 
     (string, string, string) ConstructDamageLine(KeyValuePair<DamageSourceData, int> data, int totaldmg)
     {
         string owner = "";
         string source = "";
-        if (data.Key.OwnerID >= 0) {
+        if (data.Key.OwnerID >= 0)
+        {
             if (data.Key.OwnerType == DamageSourceOwner.Player)
                 owner = Main.player[data.Key.OwnerID].name + "'s ";
             if (data.Key.OwnerType == DamageSourceOwner.NPC)
@@ -173,7 +176,9 @@ public class dpsSystem : ModSystem
                 isBossAlive = true;
                 bossTimeIGT = 0;
                 bossTimeRTA = DateTime.UtcNow;
-                HPGraphList = new();
+                HPGraphList_Boss = new();
+                HPGraphList_Player = new();
+                MaxHPGraph_Player = 0;
             }
             if (bossTimeIGT % 15 == 0)
             {
@@ -186,7 +191,17 @@ public class dpsSystem : ModSystem
                     }
                 }
 
-                HPGraphList.Add(bossHPTotal);
+                int playerHPTotal = 0;
+                int playerMaxHP = 0;
+                foreach (var item in Main.ActivePlayers)
+                {
+                    playerHPTotal += item.statLife;
+                    playerMaxHP += item.statLifeMax2;
+                }
+
+                HPGraphList_Boss.Add(bossHPTotal);
+                HPGraphList_Player.Add(playerHPTotal);
+                MaxHPGraph_Player = Math.Max(MaxHPGraph_Player, playerMaxHP);
             }
             bossTimeIGT++;
         }
@@ -198,6 +213,8 @@ public class dpsSystem : ModSystem
             string rta = "";
             string igt = "";
             bool printed = false;
+            if (dmgdata.Count > 0)
+                lastSplits = null;
             foreach (var npc in dmgdata)
                 if ((npc.Key.Index == -1) ? true : !Main.npc[npc.Key.Index].active || (Main.npc[npc.Key.Index].type != npc.Key.Type))
                 //^ if there's no active bosses and this NPC isn't active anymore, we'll print out the damage results. We only do this if there's no active bosses so that bosses such as Moon Lord get all the data printed at the end of the fight and not throughout.
@@ -215,7 +232,7 @@ public class dpsSystem : ModSystem
                     {
                         var l = ConstructDamageLine(i, totaldmg);
                         output += $"\n{l.Item1}: [c/ f7d57e:{l.Item2}] [c/ ababab:{l.Item3}]"; //Prepare print out the damage source, the % of the total damage from that source, and the actual value of damage from that source
-                                                                                                                                               //totaldmg += i.Value;
+                                                                                               //totaldmg += i.Value;
                         fieldvar.Add(new webhookmanager.WebhookField(l.Item1, $"{l.Item2} {l.Item3}", false)); //adds that same info to the webhook
                     }
 
@@ -245,6 +262,12 @@ public class dpsSystem : ModSystem
                     {
                         output += $"\nOther: {((float)(npc.lifeMax-totaldmg)*100 / npc.lifeMax).ToString("0.00")}% ({npc.lifeMax - totaldmg} dmg)";
                     }*/
+                    if (lastSplits == null)
+                    {
+                        lastSplits = output;
+                    }
+                    else
+                        lastSplits += $"\n{output}";
                     if (FightStatsConfig.Instance.dmg) Main.NewText(output); //print all the data saved before in one message
                     if (DiscordConfig.Instance.autowebhook && DiscordConfig.Instance.dmgwebhook) //this sends the webhook message if enabled in config
                     {
@@ -266,24 +289,44 @@ public class dpsSystem : ModSystem
                         dotdata.Remove(dotData.Key);
                     }
                 }
-                if (HPGraphList.Count() > 0)
+                if (HPGraphList_Boss.Count() > 0)
                 {
-                    int maxHP = HPGraphList.Max();
+                    int maxHP = HPGraphList_Boss.Max();
 
-                    lastPrint = new Texture2D(Main.graphics.GraphicsDevice, HPGraphList.Count(), 100);
+                    LastBossHPGraph = new Texture2D(Main.graphics.GraphicsDevice, HPGraphList_Boss.Count(), 100);
 
-                    var texData = new Color[100 * HPGraphList.Count()];
+                    var texData = new Color[100 * HPGraphList_Boss.Count()];
                     for (var i = 0; i < texData.Length; i++)
                     {
-                        int x = i % HPGraphList.Count();
-                        int y = i / HPGraphList.Count();
+                        int x = i % HPGraphList_Boss.Count();
+                        int y = i / HPGraphList_Boss.Count();
                         //new Color(33, 42, 78, 197);
-                        texData[i] = (1 - (y / 100f) > HPGraphList[x] / (float)maxHP) ? new Color(52, 66, 119) : Color.White;
+                        texData[i] = (1 - (y / 100f) > HPGraphList_Boss[x] / (float)maxHP) ? new Color(52, 66, 119) : Color.White;
                     }
-                    lastPrint.SetData(texData);
+                    LastBossHPGraph.SetData(texData);
                     //using (FileStream fs = new FileStream("dmgGraph.png", FileMode.Create))
                     //{
-                        //lastPrint.SaveAsPng(fs, lastPrint.Width, lastPrint.Height);
+                    //lastPrint.SaveAsPng(fs, lastPrint.Width, lastPrint.Height);
+                    //}
+                }
+                if (HPGraphList_Player.Count() > 0)
+                {
+                    int maxHP = MaxHPGraph_Player;
+
+                    LastPlayerHPGraph = new Texture2D(Main.graphics.GraphicsDevice, HPGraphList_Player.Count(), 100);
+
+                    var texData = new Color[100 * HPGraphList_Player.Count()];
+                    for (var i = 0; i < texData.Length; i++)
+                    {
+                        int x = i % HPGraphList_Player.Count();
+                        int y = i / HPGraphList_Player.Count();
+                        //new Color(33, 42, 78, 197);
+                        texData[i] = (1 - (y / 100f) > HPGraphList_Player[x] / (float)maxHP) ? new Color(52, 66, 119) : Color.White;
+                    }
+                    LastPlayerHPGraph.SetData(texData);
+                    //using (FileStream fs = new FileStream("dmgGraph.png", FileMode.Create))
+                    //{
+                    //lastPrint.SaveAsPng(fs, lastPrint.Width, lastPrint.Height);
                     //}
                 }
             }
@@ -317,7 +360,7 @@ public class dpsSystem : ModSystem
                 {
                     goalText = $"{Math.Truncate(goalTime / 60d % 60 * 100) / 100} seconds";
                 }
-                lastIGT = $"[c/fab698:Boss Fight Length]\n{goalText} Goal Time\n{igt} IGT\n{rta} RTA";
+                lastIGT = $"[c/fab698:Duration] [c/ababab:({goalText} Goal)]\n{igt} IGT - {rta} RTA";
                 if (FightStatsConfig.Instance.time) Main.NewText($"[c/773241:Boss Fight Length] ({goalText} goal time)\n{igt} IGT\n{rta} RTA");
 
                 if (DiscordConfig.Instance.autowebhook && (DiscordConfig.Instance.timewebhook || DiscordConfig.Instance.accessorywebhook || DiscordConfig.Instance.dmgwebhook)) //this sends the webhook message if enabled in config
@@ -586,7 +629,7 @@ public class damagecalcGlobalNPC : GlobalNPC
         if (merge.Contains(npc.type) && Main.npc.Any(x => x.boss && x.active))
         {
             //Try to get the existing damage dictionary for this NPC. if it doesn't exist, create a new one.
-            if (!dmgdata.TryGetValue(new NPCData(npc.type, -1), out var NpcDamageDict)) 
+            if (!dmgdata.TryGetValue(new NPCData(npc.type, -1), out var NpcDamageDict))
             {
                 NpcDamageDict = new() { };
             }
@@ -675,23 +718,23 @@ public class damagecalcGlobalNPC : GlobalNPC
             npc.GetGlobalNPC<damagecalcGlobalNPC>().PlayerMiscDamage[player.whoAmI] -= damageDone;
         }
         else
-        if ((npc.boss) && !blacklist.Contains(npc.type))
-        {
-            if (!dmgdata.TryGetValue(new NPCData(npc), out var NpcDamageDict))
+            if ((npc.boss) && !blacklist.Contains(npc.type))
             {
-                NpcDamageDict = new() { };
-            }
-            var sourceData = new DamageSourceData(player.whoAmI, item.type, DamageSourceType.Item);
-            int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
-            if (!NpcDamageDict.ContainsKey(sourceData))
-                NpcDamageDict[sourceData] = damageToWrite;
-            else
-                NpcDamageDict[sourceData] += damageToWrite;
-            dmgdata[new NPCData(npc)] = NpcDamageDict;
+                if (!dmgdata.TryGetValue(new NPCData(npc), out var NpcDamageDict))
+                {
+                    NpcDamageDict = new() { };
+                }
+                var sourceData = new DamageSourceData(player.whoAmI, item.type, DamageSourceType.Item);
+                int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
+                if (!NpcDamageDict.ContainsKey(sourceData))
+                    NpcDamageDict[sourceData] = damageToWrite;
+                else
+                    NpcDamageDict[sourceData] += damageToWrite;
+                dmgdata[new NPCData(npc)] = NpcDamageDict;
 
-            npc.GetGlobalNPC<damagecalcGlobalNPC>().previousHP -= damageDone;
-            npc.GetGlobalNPC<damagecalcGlobalNPC>().PlayerMiscDamage[player.whoAmI] -= damageDone;
-        }
+                npc.GetGlobalNPC<damagecalcGlobalNPC>().previousHP -= damageDone;
+                npc.GetGlobalNPC<damagecalcGlobalNPC>().PlayerMiscDamage[player.whoAmI] -= damageDone;
+            }
     }
     public override void PostAI(NPC npc)
     {
