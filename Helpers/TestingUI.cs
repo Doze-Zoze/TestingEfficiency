@@ -354,10 +354,13 @@ namespace TestingEfficiency.Helpers
             var dim = GetInnerDimensions().ToRectangle();
             dim.Height -= 20;
             dim.Y += 20;
-            if (dpsSystem.LastBossHPGraph is not null)
+            spriteBatch.SafeBegin(default,new(null,SamplerState.PointClamp,null,null),null,Main.UIScaleMatrix,() =>
             {
-                spriteBatch.Draw(dpsSystem.LastBossHPGraph, dim, Color.White);
-            }
+                if (dpsSystem.LastBossHPGraph is not null)
+                {
+                    spriteBatch.Draw(dpsSystem.LastBossHPGraph, dim, Color.White);
+                }
+            });
         }
     }
     public class PlayerHealthGraph : UIPanel
@@ -380,10 +383,13 @@ namespace TestingEfficiency.Helpers
             var dim = GetInnerDimensions().ToRectangle();
             dim.Height -= 20;
             dim.Y += 20;
-            if (dpsSystem.LastPlayerHPGraph is not null)
+            spriteBatch.SafeBegin(default, new(null, SamplerState.PointClamp, null, null), null, Main.UIScaleMatrix, () =>
             {
-                spriteBatch.Draw(dpsSystem.LastPlayerHPGraph, dim, Color.White);
-            }
+                if (dpsSystem.LastPlayerHPGraph is not null)
+                {
+                    spriteBatch.Draw(dpsSystem.LastPlayerHPGraph, dim, Color.White);
+                }
+            });
         }
     }
 
