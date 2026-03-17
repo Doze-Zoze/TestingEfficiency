@@ -43,6 +43,7 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
+using Terraria.UI.Chat;
 using TestingEfficiency.Commands;
 
 namespace TestingEfficiency.Helpers
@@ -51,7 +52,7 @@ namespace TestingEfficiency.Helpers
     {
         private UserInterface _testingGUI;
 
-        internal TestingUI testingUI;
+        public static TestingUI testingUI;
 
         public override void Load()
         {
@@ -118,7 +119,7 @@ namespace TestingEfficiency.Helpers
         PermanentUpgrades PermanentUpgradePanel = new PermanentUpgrades();
         BossToggles BossTogglePanel = new BossToggles();
         Loadouts LoadoutPanel = new Loadouts();
-        DPSDisplay DPSPaned = new();
+        public DPSDisplay DPSPanel = new();
 
         #region Toggle Bosses
         #endregion
@@ -177,10 +178,10 @@ namespace TestingEfficiency.Helpers
             Main.instance.LoadItem(ItemID.DPSMeter);
             DPSMenuButton.image = (TextureAssets.Item[ItemID.DPSMeter]);
             DPSMenuButton.Top = new(52 * 3 + MainMenuPanel.MarginTop, 0);
-            DPSMenuButton.activePredicate = () => Children.Contains(DPSPaned);
+            DPSMenuButton.activePredicate = () => Children.Contains(DPSPanel);
             DPSMenuButton.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
             {
-                ToggleGrandchild(DPSPaned);
+                ToggleGrandchild(DPSPanel);
             };
             MainMenuPanel.Append(DPSMenuButton);
 
@@ -293,7 +294,7 @@ namespace TestingEfficiency.Helpers
                 if (item is UIBasicTextbox)
                 {
                     var bt = (item as UIBasicTextbox);
-                    goalWidth = Math.Max(goalWidth, FontAssets.MouseText.Value.MeasureString(bt.textToUse.Invoke()).X - 140);
+                    goalWidth = Math.Max(goalWidth, FontAssets.MouseText.Value.MeasureString(bt.textToUse.Invoke()).X-140);
                 }
                 goalHeight += item.GetOuterDimensions().Height + 12;
             }
@@ -328,7 +329,6 @@ namespace TestingEfficiency.Helpers
 
             playerGraph.Top.Set(132, 0);
         }
-
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
             base.DrawSelf(spriteBatch);
@@ -415,7 +415,7 @@ namespace TestingEfficiency.Helpers
             if (textToUse is not null)
             {
                 text.SetText(textToUse.Invoke());
-                var t = FontAssets.MouseText.Value.MeasureString(textToUse.Invoke());
+                var t = ChatManager.GetStringSize(FontAssets.MouseText.Value,textToUse.Invoke(),Vector2.One);
                 Height.Set(t.Y + 12, 0);
 
             }

@@ -19,6 +19,7 @@ using CalamityMod.NPCs.Ravager;
 using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.NPCs.StormWeaver;
 using CalamityMod.NPCs.SupremeCalamitas;
+using CalamityMod.NPCs.VanillaNPCAIOverrides.Bosses;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -26,8 +27,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.UI.Chat;
 using static TestingEfficiency.dpsSystem;
 namespace TestingEfficiency;
 
@@ -208,8 +211,8 @@ public class dpsSystem : ModSystem
         else
         {
             int goalTime = 0;
-            var webhook = new webhookmanager.Webhook(Embeds: new List<webhookmanager.Embed> { });
-            var dotWebhook = new webhookmanager.Webhook(Embeds: new List<webhookmanager.Embed> { });
+            var webhook = new WebhookManager.Webhook(Embeds: new List<WebhookManager.Embed> { });
+            var dotWebhook = new WebhookManager.Webhook(Embeds: new List<WebhookManager.Embed> { });
             string rta = "";
             string igt = "";
             bool printed = false;
@@ -227,13 +230,13 @@ public class dpsSystem : ModSystem
                         totaldmg += i.Value;
                     }
                     string output = $"[c/78ffa3:{npc.Key.Name}] [c/ababab:({totaldmg} dmg dealt)]"; //Prepare to print out the total damage dealt
-                    var fieldvar = new List<webhookmanager.WebhookField> { }; //this is for discord webhook integration, ignore it
+                    var fieldvar = new List<WebhookManager.WebhookField> { }; //this is for discord webhook integration, ignore it
                     foreach (KeyValuePair<DamageSourceData, int> i in npc.Value.OrderBy(key => -key.Value)) //Runs for each damage source, sorted from highest damage dealt to lowest damage deal
                     {
                         var l = ConstructDamageLine(i, totaldmg);
                         output += $"\n{l.Item1}: [c/ f7d57e:{l.Item2}] [c/ ababab:{l.Item3}]"; //Prepare print out the damage source, the % of the total damage from that source, and the actual value of damage from that source
                                                                                                //totaldmg += i.Value;
-                        fieldvar.Add(new webhookmanager.WebhookField(l.Item1, $"{l.Item2} {l.Item3}", false)); //adds that same info to the webhook
+                        fieldvar.Add(new WebhookManager.WebhookField(l.Item1, $"{l.Item2} {l.Item3}", false)); //adds that same info to the webhook
                     }
 
                     //DoT
@@ -256,12 +259,6 @@ public class dpsSystem : ModSystem
 
                         dotdata.Remove(dotData.Key);
                     }
-                    /*
-                    OLD CODE IGNORE
-                    if (totaldmg < npc.lifeMax)
-                    {
-                        output += $"\nOther: {((float)(npc.lifeMax-totaldmg)*100 / npc.lifeMax).ToString("0.00")}% ({npc.lifeMax - totaldmg} dmg)";
-                    }*/
                     if (lastSplits == null)
                     {
                         lastSplits = output;
@@ -269,13 +266,6 @@ public class dpsSystem : ModSystem
                     else
                         lastSplits += $"\n{output}";
                     if (FightStatsConfig.Instance.dmg) Main.NewText(output); //print all the data saved before in one message
-                    if (DiscordConfig.Instance.autowebhook && DiscordConfig.Instance.dmgwebhook) //this sends the webhook message if enabled in config
-                    {
-                        // webhook.embeds.Add(new webhookmanager.Embed(Title: "Boss Fight Length", Fields: new List<webhookmanager.WebhookField> { new webhookmanager.WebhookField("In-Game Time", igt, true), new webhookmanager.WebhookField("Real Time", rta, true) }, Description: ""));
-                        webhook.embeds.Add(new webhookmanager.Embed(Title: npc.Key.Name, Fields: fieldvar, Description: $"({totaldmg} dmg dealt)"));
-                        //webhook.embeds.Add(new webhookmanager.Embed(Title: "Equipment", ))
-                        //webhook.Publish();
-                    }
                     dmgdata.Remove(npc.Key); //removes that NPC from the damage list, now that the info has been printed out
                     printed = true;
                 }
@@ -300,14 +290,9 @@ public class dpsSystem : ModSystem
                     {
                         int x = i % HPGraphList_Boss.Count();
                         int y = i / HPGraphList_Boss.Count();
-                        //new Color(33, 42, 78, 197);
-                        texData[i] = (1 - (y / 100f) > HPGraphList_Boss[x] / (float)maxHP) ? new Color(52, 66, 119) : Color.White;
+                        texData[i] = (1 - (y / 100f) > HPGraphList_Boss[x] / (float)maxHP) ? new Color(52, 66, 119) : (x % 120 < 60 ? Color.White : Color.WhiteSmoke);
                     }
                     LastBossHPGraph.SetData(texData);
-                    //using (FileStream fs = new FileStream("dmgGraph.png", FileMode.Create))
-                    //{
-                    //lastPrint.SaveAsPng(fs, lastPrint.Width, lastPrint.Height);
-                    //}
                 }
                 if (HPGraphList_Player.Count() > 0)
                 {
@@ -320,14 +305,9 @@ public class dpsSystem : ModSystem
                     {
                         int x = i % HPGraphList_Player.Count();
                         int y = i / HPGraphList_Player.Count();
-                        //new Color(33, 42, 78, 197);
-                        texData[i] = (1 - (y / 100f) > HPGraphList_Player[x] / (float)maxHP) ? new Color(52, 66, 119) : Color.White;
+                        texData[i] = (1 - (y / 100f) > HPGraphList_Player[x] / (float)maxHP) ? new Color(52, 66, 119) : (x % 120 < 60 ? Color.White : Color.WhiteSmoke);
                     }
                     LastPlayerHPGraph.SetData(texData);
-                    //using (FileStream fs = new FileStream("dmgGraph.png", FileMode.Create))
-                    //{
-                    //lastPrint.SaveAsPng(fs, lastPrint.Width, lastPrint.Height);
-                    //}
                 }
             }
             if (isBossAlive)
@@ -363,17 +343,38 @@ public class dpsSystem : ModSystem
                 lastIGT = $"[c/fab698:Duration] [c/ababab:({goalText} Goal)]\n{igt} IGT - {rta} RTA";
                 if (FightStatsConfig.Instance.time) Main.NewText($"[c/773241:Boss Fight Length] ({goalText} goal time)\n{igt} IGT\n{rta} RTA");
 
-                if (DiscordConfig.Instance.autowebhook && (DiscordConfig.Instance.timewebhook || DiscordConfig.Instance.accessorywebhook || DiscordConfig.Instance.dmgwebhook)) //this sends the webhook message if enabled in config
+                if (DiscordConfig.Instance.autowebhook) //this sends the webhook message if enabled in config
                 {
-                    if (DiscordConfig.Instance.timewebhook) webhook.embeds.Add(new webhookmanager.Embed(Title: "Boss Fight Length", Fields: new List<webhookmanager.WebhookField> { new webhookmanager.WebhookField("In-Game Time", igt, true), new webhookmanager.WebhookField("Real Time", rta, true) }, Description: ""));
-                    //webhook.embeds.Add(new webhookmanager.Embed(Title: npc.Key.Name, Fields: fieldvar, Description: $"({totaldmg} dmg dealt)"));
-                    string equip = "";
-                    for (var i = 0; i <= 9; i++)
-                    {
-                        equip += Main.LocalPlayer.armor[i].HoverName + "\\n";
-                    }
+                    Vector2 igt_size = ChatManager.GetStringSize(FontAssets.MouseText.Value, lastIGT, new Vector2(1)) + new Vector2(24);
+                    Vector2 split_size = ChatManager.GetStringSize(FontAssets.MouseText.Value, lastSplits, new Vector2(1)) + new Vector2(24);
 
-                    if (DiscordConfig.Instance.accessorywebhook) webhook.embeds.Add(new webhookmanager.Embed("Equipment", equip));
+                    int spacer = 4;
+
+                    var width = (new float[] { igt_size.X, split_size.X, 124 }).Max();
+                    var height = 154f + spacer + 154f + spacer + igt_size.Y + spacer + split_size.Y;
+
+                    RenderTarget2D target = new RenderTarget2D(Main.graphics.GraphicsDevice, (int)width, (int)height);
+                    Main.graphics.GraphicsDevice.SetRenderTarget(target);
+                    Main.graphics.GraphicsDevice.Clear(Color.Transparent);
+                    Main.spriteBatch.Begin(default, null, SamplerState.PointClamp, null, null);
+                    var y = 0;
+                    WebhookManager.DrawPanel(Main.spriteBatch, new(0, y, (int)width, 154));
+                    Main.spriteBatch.Draw(dpsSystem.LastBossHPGraph, new Rectangle(12, y + 42, (int)width - 24, 100), Color.White);
+                    ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, FontAssets.MouseText.Value, "Boss Health Graph", new(12, y + 12), Color.White, 0, Vector2.Zero, Vector2.One, -1, 1.5f);
+                    y += 154 + spacer;
+                    WebhookManager.DrawPanel(Main.spriteBatch, new(0, y, (int)width, 154));
+                    Main.spriteBatch.Draw(dpsSystem.LastPlayerHPGraph, new Rectangle(12, y + 42, (int)width - 24, 100), Color.White);
+                    ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, FontAssets.MouseText.Value, "Player Health Graph", new(12, y + 12), Color.White, 0, Vector2.Zero, Vector2.One, -1, 1.5f);
+                    y += 154 + spacer;
+                    WebhookManager.DrawTexbox(Main.spriteBatch, new Vector2(0, y), lastIGT);
+                    y += (int)igt_size.Y + spacer;
+                    WebhookManager.DrawTexbox(Main.spriteBatch, new Vector2(0, y), lastSplits);
+
+                    Main.spriteBatch.End();
+                    Main.graphics.GraphicsDevice.SetRenderTarget(null);
+                    webhook.image = target;
+                    target.Dispose();
+
                     webhook.Publish();
                 }
             }
@@ -557,7 +558,7 @@ public class damagecalcGlobalNPC : GlobalNPC
          ModContent.NPCType < PerforatorTailMedium >(),
          ModContent.NPCType < PerforatorTailMedium >(),
          ModContent.NPCType < PerforatorTailSmall >(),
-         //ModContent.NPCType<FalseBrain>()
+         ModContent.NPCType<FalseBrain>()
     };
     public static int[] merge =
     {
