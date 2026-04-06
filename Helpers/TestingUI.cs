@@ -2,6 +2,7 @@
 using CalamityMod.Items.Accessories;
 using CalamityMod.Items.PermanentBoosters;
 using CalamityMod.Items.SummonItems;
+using CalamityMod.Items.Weapons.Magic;
 using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.AstrumAureus;
 using CalamityMod.NPCs.AstrumDeus;
@@ -28,12 +29,14 @@ using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.NPCs.StormWeaver;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
+using CalamityMod.Projectiles.Pets;
 using Microsoft.CodeAnalysis;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Terraria;
 using Terraria.GameContent;
@@ -45,6 +48,8 @@ using Terraria.ModLoader;
 using Terraria.UI;
 using Terraria.UI.Chat;
 using TestingEfficiency.Commands;
+using TestingEfficiency.DamageStats;
+using static TestingEfficiency.DataStructures;
 
 namespace TestingEfficiency.Helpers
 {
@@ -113,6 +118,7 @@ namespace TestingEfficiency.Helpers
         UIImageButtonBorder BossToggleMenuButton = new();
         UIImageButtonBorder LoadoutMenuButton = new();
         UIImageButtonBorder DPSMenuButton = new();
+        UIImageButtonBorder ExportMenuButton = new();
         #endregion
 
 
@@ -120,6 +126,7 @@ namespace TestingEfficiency.Helpers
         BossToggles BossTogglePanel = new BossToggles();
         Loadouts LoadoutPanel = new Loadouts();
         public DPSDisplay DPSPanel = new();
+        public DataExport exportPanel = new();
 
         #region Toggle Bosses
         #endregion
@@ -142,7 +149,7 @@ namespace TestingEfficiency.Helpers
             //Main Menu
             //Permanent Upgrades
             MainMenuPanel.Width = new(48 + MainMenuPanel.PaddingLeft + MainMenuPanel.PaddingRight, 0);
-            MainMenuPanel.Height = new(52 * 4 - 4 + MainMenuPanel.PaddingTop + MainMenuPanel.PaddingBottom, 0);
+            MainMenuPanel.Height = new(52 * 5 - 4 + MainMenuPanel.PaddingTop + MainMenuPanel.PaddingBottom, 0);
             MainMenuPanel.Top.Set(16, 0);
             MainMenuPanel.Left.Set(-(MainMenuPanel.Width.Pixels + 4), 0.75f);
 
@@ -185,6 +192,18 @@ namespace TestingEfficiency.Helpers
             };
             MainMenuPanel.Append(DPSMenuButton);
 
+
+            Main.instance.LoadItem(ItemID.Book);
+            ExportMenuButton.image = (TextureAssets.Item[ItemID.Book]);
+            ExportMenuButton.Top = new(52 * 4 + MainMenuPanel.MarginTop, 0);
+            ExportMenuButton.activePredicate = () => Children.Contains(exportPanel);
+            ExportMenuButton.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
+            {
+                ToggleGrandchild(exportPanel);
+            };
+            //Disabled until finished
+            //MainMenuPanel.Append(ExportMenuButton);
+
             Append(OpenMenuButton);
 
         }
@@ -225,6 +244,8 @@ namespace TestingEfficiency.Helpers
         public UIBasicTextbox time = new();
         public UIBasicTextbox splits = new();
 
+        public static SaveTestBox saveTextBox = new();
+
 
         UIList Outputs = new();
         UIScrollbar scrollbar = new();
@@ -243,11 +264,11 @@ namespace TestingEfficiency.Helpers
             playerGraph.SetPadding(PaddingTop);
             playerGraph.BackgroundColor = new Color(52, 66, 119);
 
-            time.textToUse = () => dpsSystem.lastIGT ?? "";
+            time.textToUse = () => DamageStatsSystem.lastIGT ?? "";
             time.Width.Set(0, 1);
 
             splits.Width.Set(0, 1);
-            splits.textToUse = () => dpsSystem.lastSplits ?? "";
+            splits.textToUse = () => DamageStatsSystem.lastSplits ?? "";
 
             Outputs.Width.Set(0, 1);
             Outputs.Height.Set(0, 1);
@@ -277,7 +298,7 @@ namespace TestingEfficiency.Helpers
             {
                 item.Update(gameTime);
             }
-
+            bool hasTestData = Outputs.Contains(saveTextBox);
             Outputs.Clear();
 
             Outputs.Add(graph);
@@ -356,9 +377,9 @@ namespace TestingEfficiency.Helpers
             dim.Y += 20;
             spriteBatch.SafeBegin(default,new(null,SamplerState.PointClamp,null,null),null,Main.UIScaleMatrix,() =>
             {
-                if (dpsSystem.LastBossHPGraph is not null)
+                if (DamageStatsSystem.LastBossHPGraph is not null)
                 {
-                    spriteBatch.Draw(dpsSystem.LastBossHPGraph, dim, Color.White);
+                    spriteBatch.Draw(DamageStatsSystem.LastBossHPGraph, dim, Color.White);
                 }
             });
         }
@@ -385,14 +406,291 @@ namespace TestingEfficiency.Helpers
             dim.Y += 20;
             spriteBatch.SafeBegin(default, new(null, SamplerState.PointClamp, null, null), null, Main.UIScaleMatrix, () =>
             {
-                if (dpsSystem.LastPlayerHPGraph is not null)
+                if (DamageStatsSystem.LastPlayerHPGraph is not null)
                 {
-                    spriteBatch.Draw(dpsSystem.LastPlayerHPGraph, dim, Color.White);
+                    spriteBatch.Draw(DamageStatsSystem.LastPlayerHPGraph, dim, Color.White);
                 }
             });
         }
     }
 
+    public class DataExport : UIPanel
+    {
+
+        bool initialized = false;
+
+        public static SaveTestBox saveTextBox = new();
+
+        public static Dictionary<BossTestData,SaveTestBox> testBoxes = new();
+
+        public static UIList Outputs = new();
+        UIScrollbar scrollbar = new();
+
+        int childcount = 0;
+
+
+        public override void OnInitialize()
+        {
+            Width.Set(52 * 5 + 16, 0);
+            Height.Set(52 * 2 + 45 * 5 + 24, 0);
+            Top.Set(16, 0);
+            Left.Set(-(Width.Pixels + 48 + PaddingLeft * 2 + 8), 0.75f);
+
+            Outputs.Width.Set(0, 1);
+            Outputs.Height.Set(0, 1);
+            Outputs.SetScrollbar(scrollbar);
+
+            Append(Outputs);
+            initialized = true;
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            if (saveTextBox.testData != DamageStatsSystem.lastTestData)
+            {
+                saveTextBox = new(DamageStatsSystem.lastTestData);
+            }
+
+            if (!initialized)
+            {
+                Initialize();
+
+                foreach (var item in Children)
+                {
+                    item.Initialize();
+                }
+            }
+
+            foreach (var item in Children)
+            {
+                item.Update(gameTime);
+            }
+            Outputs.Clear();
+            Outputs.Add(saveTextBox);
+
+            foreach (var test in DamageStatsSystem.CurrentTestSession.bosses)
+            {
+                if (test == DamageStatsSystem.lastTestData)
+                    continue;
+                if (!testBoxes.Keys.Contains(test))
+                {
+                    var t = new SaveTestBox(test);
+                    testBoxes.Add(test,t);
+                }
+            }
+
+            foreach (var item in testBoxes)
+            {
+                Outputs.Add(item.Value);
+            }
+
+            if (Children.Count() != childcount)
+            {
+                childcount = Children.Count();
+                foreach (var item in Children)
+                {
+                    if (item is SaveTestBox)
+                        (item as SaveTestBox).UpdateText();
+                }
+            }
+
+
+            var goalWidth = 600f;
+            var goalHeight = 0f;
+            foreach (var item in Outputs)
+            {
+                if (item is UIBasicTextbox)
+                {
+                    var bt = (item as UIBasicTextbox);
+                    goalWidth = Math.Max(goalWidth, FontAssets.MouseText.Value.MeasureString(bt.textToUse.Invoke()).X - 140);
+                }
+                goalHeight += item.GetOuterDimensions().Height + 8;
+            }
+            Width.Set(goalWidth, 0);
+
+
+
+            Height.Set(goalHeight + 16, 0);
+            MaxWidth.Set(0, 0.5f);
+            MaxHeight.Set(-32, 1f);
+            Top.Set(16, 0);
+            var calcWidth = GetOuterDimensions();
+            Left.Set(-(calcWidth.Width + 48 + PaddingLeft * 2 + 8), 0.75f);
+            return;
+        }
+        protected override void DrawSelf(SpriteBatch spriteBatch)
+        {
+            base.DrawSelf(spriteBatch);
+        }
+    }
+    public class SaveTestBox : UIPanel
+    {
+        public BossTestData testData;
+
+        public UIImageButtonBorder saved = new();
+        public UIImageButtonBorder delete = new();
+        public UIText text = new("Test List Data", 0.8f);
+
+        public UIText TimeLabel = new("Time", 0.8f);
+        public UIText BossLabel = new("Boss", 0.8f);
+        public UIText NoteLabel = new("Note", 0.8f);
+        public UIText GearLabel = new("Gear", 0.8f);
+
+        public UITextInput BossName = new();
+        public UITextInput Time = new();
+        public UITextInput Note = new();
+        public UITextInput Gear = new();
+
+        public SaveTestBox(BossTestData data = null)
+        {
+            testData = data;
+            Width.Set(0, 1);
+            Height.Set(56 * 4, 0);
+            BackgroundColor = new Color(52, 66, 119);
+            Append(text);
+
+            Main.instance.LoadItem(ItemID.FallenStar);
+            saved.image = (TextureAssets.Item[ItemID.FallenStar]);
+            saved.activePredicate = () => DamageStatsSystem.CurrentTestSession.bosses.Contains(testData);
+            saved.OnLeftClick += (evt, el) =>
+            {
+                if (saved.activePredicate.Invoke())
+                    DamageStatsSystem.CurrentTestSession.bosses.Remove(testData);
+                else
+                    DamageStatsSystem.CurrentTestSession.bosses.Add(testData);
+
+                BossName.addInput.SetContents(testData.name);
+                Time.addInput.SetContents(testData.timeString);
+                Note.addInput.SetContents(testData.note);
+                Gear.addInput.SetContents(testData.gear);
+
+            };
+            saved.Top.Set(0, 0);
+            saved.Left.Set(-48, 1);
+            Append(saved);
+
+            Main.instance.LoadItem(ItemID.TrashCan);
+            delete.image = (TextureAssets.Item[ItemID.TrashCan]);
+            delete.OnLeftClick += (evt, el) =>
+            {
+                DataExport.testBoxes.Remove(testData);
+            };
+            delete.Top.Set(0, 0);
+            delete.Left.Set(-48 - 56, 1);
+            Append(delete);
+
+            Append(BossLabel ??= new("Boss", 0.8f));
+            Append(NoteLabel ??= new("Note", 0.8f));
+            Append(TimeLabel ??= new("Time", 0.8f));
+            Append(GearLabel ??= new("Gear", 0.8f));
+
+            BossName.addInput.OnContentsChanged += (_) =>
+            {
+                testData?.name = _;
+            };
+            BossName.Height.Set(48, 0);
+            Append(BossName);
+
+            Time.addInput.OnContentsChanged += (_) =>
+            {
+                testData?.timeString = _;
+            };
+
+            Time.Height.Set(48, 0);
+            Time.Top.Set(56, 0);
+            Append(Time);
+
+            Note.addInput.OnContentsChanged += (_) =>
+            {
+                testData?.note = _;
+            };
+
+            Note.Height.Set(48, 0);
+            Note.Top.Set(56 * 3, 0);
+            Append(Note);
+
+            Gear.addInput.OnContentsChanged += (_) =>
+            {
+                testData?.gear = _;
+            };
+            Gear.Height.Set(48, 0);
+            Gear.Top.Set(56 * 2, 0);
+            Append(Gear);
+
+            UpdateText();
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            testData ??= DamageStatsSystem.lastTestData;
+            bool isLatest = DamageStatsSystem.lastTestData == testData;
+
+            if (!isLatest && !Children.Contains(delete) && !saved.activePredicate.Invoke())
+                Append(delete);
+            else if ((isLatest && Children.Contains(delete)) || saved.activePredicate.Invoke())
+                RemoveChild(delete);
+
+            Main.instance.LoadItem(ItemID.FallenStar);
+            saved.image = (TextureAssets.Item[ItemID.FallenStar]);
+            saved.frame = saved.image.Frame(1, 9);
+            saved.Top.Set(0, 0);
+
+            BossName.Height.Set(48, 0);
+            BossName.Left.Set(40, 0);
+            BossName.Width.Set(-40, 1);
+            BossName.Top.Set(56, 0);
+            BossLabel.Top = BossName.Top;
+            BossLabel.Height = BossName.Height;
+            BossLabel.TextOriginY = 0.5f;
+
+            Time.Left.Set(40, 0);
+            Time.Width.Set(-40, 1);
+            Time.Height.Set(48, 0);
+            Time.Top.Set(56 * 2, 0);
+            TimeLabel.Top = Time.Top;
+            TimeLabel.Height = Time.Height;
+            TimeLabel.TextOriginY = 0.5f;
+
+
+            Note.Left.Set(40, 0);
+            Note.Width.Set(-40, 1);
+            Note.Height.Set(48, 0);
+            Note.Top.Set(56 * 4, 0);
+            NoteLabel.Top = Note.Top;
+            NoteLabel.Height = Note.Height;
+            NoteLabel.TextOriginY = 0.5f;
+
+            Gear.Left.Set(40, 0);
+            Gear.Width.Set(-40, 1);
+            Gear.Height.Set(48, 0);
+            Gear.Top.Set(56 * 3, 0);
+            GearLabel.Top = Gear.Top;
+            GearLabel.Height = Gear.Height;
+            GearLabel.TextOriginY = 0.5f;
+
+
+            Height.Set(56 * 5 +  16, 0);
+            text.Top.Set(10, 0);
+            text.SetText(isLatest ? "Last Test Export Details" : "", 0.75f,true);
+
+
+
+            base.Update(gameTime);
+        }
+
+        public void UpdateText()
+        {
+            BossName.addInput.SetContents(testData?.name ?? "a");
+            Time.addInput.SetContents(testData?.timeString ?? "0:00");
+            Note.addInput.SetContents(testData?.note ?? "");
+            Gear.addInput.SetContents(testData?.gear ?? "");
+        }
+
+        protected override void DrawSelf(SpriteBatch spriteBatch)
+        {
+            base.DrawSelf(spriteBatch);
+        }
+    }
     public class UIBasicTextbox : UIPanel
     {
         public UIText text = new("");
@@ -1290,7 +1588,7 @@ namespace TestingEfficiency.Helpers
             if (image != null)
             {
                 var tex = secondaryImage.Item2 != null && secondaryImage.Item2.Invoke() ? secondaryImage.Item1.Value : image.Value;
-                spriteBatch.Draw(tex, dim.Center() - new Vector2(1, 0), frame, Color.White * (active ? 1 : 0.33f), 0, tex.Size() * 0.5f, MathHelper.Min(MathHelper.Min(inDim.Width / tex.Width, inDim.Height / tex.Height), 1), 0, 0);
+                spriteBatch.Draw(tex, dim.Center() - new Vector2(1, 0), frame, Color.White * (active ? 1 : 0.33f), 0, (frame?.Size() ?? tex.Size()) * 0.5f, MathHelper.Min(MathHelper.Min(inDim.Width / (frame?.Width ?? tex.Width), inDim.Height / (frame?.Height ?? tex.Height)), 1), 0, 0);
             }
         }
 

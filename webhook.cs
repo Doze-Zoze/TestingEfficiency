@@ -108,7 +108,7 @@ public class WebhookManager : ModSystem
         {
             if (DiscordConfig.Instance.webhookurl == "")
             {
-                Main.NewText("Add a Webhook URL to publish");
+                Main.NewText("Add a valid Discord Webhook URL in configs to publish");
                 return;
             }
             if (image is not null)

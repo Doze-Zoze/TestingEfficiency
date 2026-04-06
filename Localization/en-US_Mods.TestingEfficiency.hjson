@@ -52,22 +52,7 @@ Configs: {
 
 		autowebhook: {
 			Label: Enable Auto Webhook
-			Tooltip: Automatically publishes webhooks when a boss is defeated
-		}
-
-		dmgwebhook: {
-			Label: Push Damage Stats
-			Tooltip: Pushes damage breakdown when publishing webhooks
-		}
-
-		timewebhook: {
-			Label: Push Time Stats
-			Tooltip: Pushes RTA/IGT breakdown when publishing webhooks
-		}
-
-		accessorywebhook: {
-			Label: Push Equipment
-			Tooltip: Pushes current equipment when publishing webhooks
+			Tooltip: Automatically publishes webhooks when a boss is defeated with fight stats as an image
 		}
 	}
 
@@ -75,18 +60,18 @@ Configs: {
 		DisplayName: Boss Fight Stats Config
 
 		time: {
-			Label: Fight Time Stats
-			Tooltip: Shows RTA/IGT breakdowns
+			Label: Fight Time Stats in chat
+			Tooltip: Shows RTA/IGT breakdowns. Does not effect the UI fight stats page
 		}
 
 		dmg: {
-			Label: Push Damage Stats
-			Tooltip: Shows Damage source breakdowns
+			Label: Damage Stats in chat
+			Tooltip: Shows Damage source breakdowns. Does not effect the UI fight stats page
 		}
 
 		detailedDmgStats: {
 			Label: More Detailed Damage Stats
-			Tooltip: Projectiles display the projectile name instead of the item used to spawn the projectile
+			Tooltip: Projectiles display the projectile name instead of the item used to spawn the projectile. This applies to both chat and UI fight stats
 		}
 	}
 

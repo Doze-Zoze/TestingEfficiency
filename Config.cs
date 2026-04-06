@@ -5,22 +5,16 @@ using System.Text.Json;
 using Terraria.ModLoader.Config;
 
 namespace TestingEfficiency;
-
-[Label("Discord Config (WIP)")]
 public class DiscordConfig : ModConfig
 {
 	public static DiscordConfig Instance;
 
-	[Label("Discord Webook URL")]
-	[Tooltip("URL of the Webhook to publish to")]
 	public string webhookurl = "";
 
-	[Label("Enable Auto Webhook")]
-	[Tooltip("Automatically publishes webhooks when a boss is defeated")]
     [DefaultValue(false)]
     public bool autowebhook = false;
 	
-	[Label("Push Time Stats to Webhook")]
+	/*[Label("Push Time Stats to Webhook")]
 	[Tooltip("Pushes RTA/IGT breakdown when publishing webhooks")]
     [DefaultValue(true)]
     public bool timewebhook = true;
@@ -33,27 +27,20 @@ public class DiscordConfig : ModConfig
     [Label("Push Equipment to Webhook")]
     [Tooltip("Pushes current equipment when publishing webhooks")]
     [DefaultValue(true)]
-    public bool accessorywebhook = true;
+    public bool accessorywebhook = true;*/
     public override ConfigScope Mode => ConfigScope.ClientSide;
 }
 
-[Label("Boss Fight Stats Config")]
 public class FightStatsConfig : ModConfig
 {
     public static FightStatsConfig Instance;
 
-    [Label("Fight Time Stats")]
-    [Tooltip("Shows RTA/IGT breakdowns")]
     [DefaultValue(true)]
     public bool time = false;
 
-    [Label("Push Damage Stats")]
-    [Tooltip("Shows Damage source breakdowns")]
     [DefaultValue(true)]
     public bool dmg = false;
 
-    [Label("More Detailed Damage Stats")]
-    [Tooltip("Projectiles display the projectile name instead of the item used to spawn the projectile")]
     [DefaultValue(false)]
     public bool detailedDmgStats = false;
     public override ConfigScope Mode => ConfigScope.ClientSide;
@@ -64,24 +51,14 @@ public class TestingLoadouts : ModConfig
 {
 	public static TestingLoadouts Instance;
 
-	[Label("Melee Loadouts")]
-	[Tooltip("Melee Loadout Items")]
 	public Dictionary<string, List<string>> meleeLoadouts = new Dictionary<string, List<string>>();
 
-	[Label("Ranger Loadouts")]
-	[Tooltip("Ranger Loadout Items")]
 	public Dictionary<string, List<string>> rangerLoadouts = new Dictionary<string, List<string>>();
 
-	[Label("Mage Loadouts")]
-	[Tooltip("Mage Loadout Items")]
 	public Dictionary<string, List<string>> mageLoadouts = new Dictionary<string, List<string>>();
 
-	[Label("Summoner Loadouts")]
-	[Tooltip("Summoner Loadout Items")]
-	public Dictionary<string, List<string>> summonerLoadouts = new Dictionary<string, List<string>>();//JsonSerializer.Deserialize<Dictionary<string, List<string>>>(JsonInfo.summonerJson);
+	public Dictionary<string, List<string>> summonerLoadouts = new Dictionary<string, List<string>>();
 
-	[Label("Rogue Loadouts")]
-	[Tooltip("Rogue Loadout Items")]
 	public Dictionary<string, List<string>> rogueLoadouts = new Dictionary<string, List<string>>();
 
 	public override ConfigScope Mode => ConfigScope.ClientSide;
