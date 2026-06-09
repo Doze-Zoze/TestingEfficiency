@@ -1,15 +1,7 @@
-﻿using CalamityMod;
-using CalamityMod.DataStructures;
-using CalamityMod.Items.PermanentBoosters;
-using CalamityMod.Systems.Collections;
-using System;
-using System.Collections.Generic;
+﻿/*using CalamityMod.Systems.Collections;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.ModLoader;
-using TestingEfficiency.Helpers;
 
 namespace TestingEfficiency.Commands
 {
@@ -23,7 +15,7 @@ namespace TestingEfficiency.Commands
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
-            if (!CalamityBuffSets.SummonTagDebuff.ContainsKey(caller.Player.HeldItem.type))
+            if (CalamityBuffSets.SummonTagDebuff[caller.Player.HeldItem.type] is null)
             {
                 Main.NewText("Held item does not have an associated SummonTag");
                 return;
@@ -90,3 +82,4 @@ namespace TestingEfficiency.Commands
         }
     }
 }
+*/

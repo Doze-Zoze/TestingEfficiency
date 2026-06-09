@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using CalamityMod.Items.PermanentBoosters;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -11,33 +10,33 @@ namespace TestingEfficiency.Commands;
 
 public class configCmd : ModCommand
 {
-	public override CommandType Type => CommandType.Chat;
+    public override CommandType Type => CommandType.Chat;
 
-	public override string Command => "config";
+    public override string Command => "config";
 
-	public override string Description => "Add/Edit Presets";
+    public override string Description => "Add/Edit Presets";
 
-	public override void Action(CommandCaller caller, string input, string[] args)
-	{
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Expected O, but got Unknown
-		if (args.Length < 2)
-		{
-			Main.NewText("Usage: /config <class> <preset-name>");
-			return;
-		}
-		if (!new List<string> { "melee", "ranger", "mage", "summoner", "rogue" }.Contains(args[0]))
-		{
-			Main.NewText("Not a valid class! Use one of the following:\nmelee, ranger, mage, summoner, rogue");
-			return;
+    public override void Action(CommandCaller caller, string input, string[] args)
+    {
+        //IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+        //IL_00b3: Expected O, but got Unknown
+        if (args.Length < 2)
+        {
+            Main.NewText("Usage: /config <class> <preset-name>");
+            return;
+        }
+        if (!new List<string> { "melee", "ranger", "mage", "summoner", "rogue" }.Contains(args[0]))
+        {
+            Main.NewText("Not a valid class! Use one of the following:\nmelee, ranger, mage, summoner, rogue");
+            return;
         }
         Player player = caller.Player;
         Save(player, args);
-        
-	}
 
-	public static List<string> Save(Player player, string[] args)
-	{
+    }
+
+    public static List<string> Save(Player player, string[] args)
+    {
         List<string> loadout = new List<string>();
         for (int i = 0; i < 20; i++)
         {
@@ -108,17 +107,17 @@ public class configCmd : ModCommand
         throw new Exception("A file could not be created, or updated at:\n'{path}'\n\n If you ARE using Onedrive, please reinstall tModloader in a different location.\n If you ARE NOT using Onedrive, please disable Windows Real-Time protection.");
     }
 
-	internal static string GetFullNameById(int id)
-	{
-		ModItem modItem = ItemLoader.GetItem(id);
-		if (modItem != null)
-		{
-			return modItem.Mod.Name + ":" + modItem.Name;
-		}
-		if (id < 5125)
-		{
-			return "Terraria:" + ItemID.Search.GetName(id);
-		}
-		return null;
-	}
+    internal static string GetFullNameById(int id)
+    {
+        ModItem modItem = ItemLoader.GetItem(id);
+        if (modItem != null)
+        {
+            return modItem.Mod.Name + ":" + modItem.Name;
+        }
+        if (id < 5125)
+        {
+            return "Terraria:" + ItemID.Search.GetName(id);
+        }
+        return null;
+    }
 }

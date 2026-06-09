@@ -1,17 +1,9 @@
-﻿using CalamityMod;
-using CalamityMod.NPCs.AcidRain;
-using Ionic.Zlib;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
-using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
-using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
 
@@ -20,12 +12,11 @@ namespace TestingEfficiency.Helpers
     internal static class Helpers
     {
         static Player player => Main.LocalPlayer;
-
         public static int playerLifeTotal
         {
             get
             {
-                return 100 + player.ConsumedLifeCrystals*20 + player.ConsumedLifeFruit*5 + calLifeUsed*25;
+                return 100 + player.ConsumedLifeCrystals * 20 + player.ConsumedLifeFruit * 5 + calLifeUsed * 25;
             }
             set
             {
@@ -37,7 +28,7 @@ namespace TestingEfficiency.Helpers
                 }
                 else if (value <= 400)
                 {
-                    player.ConsumedLifeCrystals = (value-100)/20;
+                    player.ConsumedLifeCrystals = (value - 100) / 20;
                     player.ConsumedLifeFruit = 0;
                     calLifeUsed = 0;
                 }
@@ -45,7 +36,7 @@ namespace TestingEfficiency.Helpers
                 {
 
                     player.ConsumedLifeCrystals = 15;
-                    player.ConsumedLifeFruit = (value-400)/5;
+                    player.ConsumedLifeFruit = (value - 400) / 5;
                     calLifeUsed = 0;
                 }
                 else
@@ -57,37 +48,13 @@ namespace TestingEfficiency.Helpers
                 }
             }
         }
-        public static int calLifeUsed
-        {
-            get
-            {
-                int count = 0;
-                if (player.Calamity().sTangerine) //bOrange - sTangerine
-                    count++;
-                if (player.Calamity().mFruit) //mFruit
-                    count++;
-                if (player.Calamity().tCloudberry) //bOrange - eBerry
-                    count++;
-                if (player.Calamity().sStrawberry) //bOrange - dFruit
-                    count++;
-                return count;
-            }
-            set
-            {
-
-                player.Calamity().sTangerine = value > 0;
-                player.Calamity().mFruit = value > 1;
-                player.Calamity().tCloudberry = value > 2;
-                player.Calamity().sStrawberry = value > 3;
-            }
-        }
 
         public static int playerManaTotal
         {
             get
             {
 
-                return player.ConsumedManaCrystals * 20 + 20 + 50*calManaUsed;
+                return player.ConsumedManaCrystals * 20 + 20 + 50 * calManaUsed;
             }
             set
             {
@@ -111,25 +78,50 @@ namespace TestingEfficiency.Helpers
                 }
             }
         }
+        #region Calamity Support
+        public static int calLifeUsed
+        {
+            get
+            {
+                int count = 0;
+                if (CalHpOne) //bOrange - sTangerine
+                    count++;
+                if (CalHp2) //mFruit
+                    count++;
+                if (CalHp3) //bOrange - eBerry
+                    count++;
+                if (CalHp4) //bOrange - dFruit
+                    count++;
+                return count;
+            }
+            set
+            {
+
+                CalHpOne = value > 0;
+                CalHp2 = value > 1;
+                CalHp3 = value > 2;
+                CalHp4 = value > 3;
+            }
+        }
 
         public static int calManaUsed
         {
             get
             {
                 int count = 0;
-                if (player.Calamity().cShard)
+                if (CalMana1)
                     count++;
-                if (player.Calamity().eCore)
+                if (CalMana2)
                     count++;
-                if (player.Calamity().pHeart)
+                if (CalMana3)
                     count++;
                 return count;
             }
             set
             {
-                player.Calamity().cShard = value > 0;
-                player.Calamity().eCore = value > 1;
-                player.Calamity().pHeart = value > 2;
+                CalMana1 = value > 0;
+                CalMana2 = value > 1;
+                CalMana3 = value > 2;
             }
         }
 
@@ -139,20 +131,20 @@ namespace TestingEfficiency.Helpers
             {
 
                 int count = 0;
-                if (player.Calamity().rageBoostOne)
+                if (CalRage1)
                     count++;
-                if (player.Calamity().rageBoostTwo)
+                if (CalRage2)
                     count++;
-                if (player.Calamity().rageBoostThree)
+                if (CalRage3)
                     count++;
                 return count;
             }
             set
             {
 
-                player.Calamity().rageBoostOne = value > 0;
-                player.Calamity().rageBoostTwo = value > 1;
-                player.Calamity().rageBoostThree = value > 2;
+                CalRage1 = value > 0;
+                CalRage2 = value > 1;
+                CalRage3 = value > 2;
             }
         }
         public static int adrenBoostUsed
@@ -161,21 +153,97 @@ namespace TestingEfficiency.Helpers
             {
 
                 int count = 0;
-                if (player.Calamity().adrenalineBoostOne)
+                if (CalAdren1)
                     count++;
-                if (player.Calamity().adrenalineBoostTwo)
+                if (CalAdren2)
                     count++;
-                if (player.Calamity().adrenalineBoostThree)
+                if (CalAdren3)
                     count++;
                 return count;
             }
             set
             {
-                player.Calamity().adrenalineBoostOne = value > 0;
-                player.Calamity().adrenalineBoostTwo = value > 1;
-                player.Calamity().adrenalineBoostThree = value > 2;
+                CalAdren1 = value > 0;
+                CalAdren2 = value > 1;
+                CalAdren3 = value > 2;
             }
         }
+        internal static bool CalHpOne
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "SanguineTangerine");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "SanguineTangerine", value); }
+        }
+        internal static bool CalHp2
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "MiracleFruit");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "MiracleFruit", value); }
+        }
+        internal static bool CalHp3
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "TaintedCloudberry");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "TaintedCloudberry", value); }
+        }
+        internal static bool CalHp4
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "SacredStrawberry");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "SacredStrawberry", value); }
+        }
+
+        internal static bool CalMana1
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "CometShard");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "CometShard", value); }
+        }
+
+        internal static bool CalMana2
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "EtherealCore");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "EtherealCore", value); }
+        }
+
+        internal static bool CalMana3
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "PhantomHeart");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "PhantomHeart", value); }
+        }
+
+        internal static bool CalRage1
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "MushroomPlasmaRoot");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "MushroomPlasmaRoot", value); }
+        }
+        internal static bool CalRage2
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "InfernalBlood");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "InfernalBlood", value); }
+        }
+        internal static bool CalRage3
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "RedLightningContainer");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "RedLightningContainer", value); }
+        }
+        internal static bool CalAdren1
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "ElectrolyteGelPack");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "ElectrolyteGelPack", value); }
+        }
+        internal static bool CalAdren2
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "StarlightFuelCell");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "StarlightFuelCell", value); }
+        }
+        internal static bool CalAdren3
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "Ectoheart");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "Ectoheart", value); }
+        }
+        internal static bool CalAccessory
+        {
+            get => !TestingEfficiency.CalamityLoaded ? false : (bool)TestingEfficiency.CalamityMod.Call("GetPowerup", player, "CelestialOnion");
+            set { if (TestingEfficiency.CalamityLoaded) TestingEfficiency.CalamityMod.Call("SetPowerup", player, "CelestialOnion", value); }
+        }
+
+        #endregion
         public static void SetTexture(this UIImageButton e, string texture)
         {
             if (e == null)

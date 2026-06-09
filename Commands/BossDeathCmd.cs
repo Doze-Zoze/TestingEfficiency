@@ -1,6 +1,4 @@
-using CalamityMod;
-using CalamityMod.Projectiles.Ranged;
-using System.Collections.Generic;
+/*using CalamityMod;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -8,14 +6,14 @@ namespace TestingEfficiency.Commands;
 
 public class BossDeathCmd : ModCommand
 {
-	public override CommandType Type => CommandType.Chat;
+    public override CommandType Type => CommandType.Chat;
 
-	public override string Command => "boss";
+    public override string Command => "boss";
 
-	public override string Description => "Set Boss Progression";
+    public override string Description => "Set Boss Progression";
 
-	public override void Action(CommandCaller caller, string input, string[] args)
-	{
+    public override void Action(CommandCaller caller, string input, string[] args)
+    {
         if (args.Length < 1)
         {
             Main.NewText("Please use the following syntaxes:\n/boss <toggle>, /boss all, /boss list \nValid Presets are: ks, ds, eoc, crab, evil1, evil2, qb, deerclops, skeletron, sg, wof, qs, cryo, destroyer, as, twins, brimmy, prime, calclone, plantera, levi, aureus, golem, pbg, eol, fishron, ravager, cultist, deus, ml, guardians, folly, provi, sw, cv, signus, polter, od, dog, yharon, exos, scal");
@@ -246,3 +244,4 @@ public class BossDeathCmd : ModCommand
 
     }
 }
+*/

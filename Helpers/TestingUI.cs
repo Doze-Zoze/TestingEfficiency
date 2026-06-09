@@ -1,42 +1,9 @@
-﻿using CalamityMod;
-using CalamityMod.Items.Accessories;
-using CalamityMod.Items.PermanentBoosters;
-using CalamityMod.Items.SummonItems;
-using CalamityMod.Items.Weapons.Magic;
-using CalamityMod.NPCs.AquaticScourge;
-using CalamityMod.NPCs.AstrumAureus;
-using CalamityMod.NPCs.AstrumDeus;
-using CalamityMod.NPCs.BrimstoneElemental;
-using CalamityMod.NPCs.Bumblebirb;
-using CalamityMod.NPCs.CalClone;
-using CalamityMod.NPCs.CeaselessVoid;
-using CalamityMod.NPCs.Crabulon;
-using CalamityMod.NPCs.Cryogen;
-using CalamityMod.NPCs.DesertScourge;
-using CalamityMod.NPCs.DevourerofGods;
-using CalamityMod.NPCs.ExoMechs.Ares;
-using CalamityMod.NPCs.HiveMind;
-using CalamityMod.NPCs.Leviathan;
-using CalamityMod.NPCs.OldDuke;
-using CalamityMod.NPCs.Perforator;
-using CalamityMod.NPCs.PlaguebringerGoliath;
-using CalamityMod.NPCs.Polterghast;
-using CalamityMod.NPCs.PrimordialWyrm;
-using CalamityMod.NPCs.ProfanedGuardians;
-using CalamityMod.NPCs.Ravager;
-using CalamityMod.NPCs.Signus;
-using CalamityMod.NPCs.SlimeGod;
-using CalamityMod.NPCs.StormWeaver;
-using CalamityMod.NPCs.SupremeCalamitas;
-using CalamityMod.NPCs.Yharon;
-using CalamityMod.Projectiles.Pets;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using Terraria;
 using Terraria.GameContent;
@@ -315,7 +282,7 @@ namespace TestingEfficiency.Helpers
                 if (item is UIBasicTextbox)
                 {
                     var bt = (item as UIBasicTextbox);
-                    goalWidth = Math.Max(goalWidth, FontAssets.MouseText.Value.MeasureString(bt.textToUse.Invoke()).X-140);
+                    goalWidth = Math.Max(goalWidth, FontAssets.MouseText.Value.MeasureString(bt.textToUse.Invoke()).X - 140);
                 }
                 goalHeight += item.GetOuterDimensions().Height + 12;
             }
@@ -375,13 +342,16 @@ namespace TestingEfficiency.Helpers
             var dim = GetInnerDimensions().ToRectangle();
             dim.Height -= 20;
             dim.Y += 20;
-            spriteBatch.SafeBegin(default,new(null,SamplerState.PointClamp,null,null),null,Main.UIScaleMatrix,() =>
+
+            spriteBatch.End();
+            spriteBatch.Begin(default, null, SamplerState.PointClamp, null, null, null, Main.UIScaleMatrix);
+            if (DamageStatsSystem.LastBossHPGraph is not null)
             {
-                if (DamageStatsSystem.LastBossHPGraph is not null)
-                {
-                    spriteBatch.Draw(DamageStatsSystem.LastBossHPGraph, dim, Color.White);
-                }
-            });
+                spriteBatch.Draw(DamageStatsSystem.LastBossHPGraph, dim, Color.White);
+            }
+
+            spriteBatch.End();
+            spriteBatch.Begin(default, null, default, null, null, null, Main.UIScaleMatrix);
         }
     }
     public class PlayerHealthGraph : UIPanel
@@ -404,13 +374,17 @@ namespace TestingEfficiency.Helpers
             var dim = GetInnerDimensions().ToRectangle();
             dim.Height -= 20;
             dim.Y += 20;
-            spriteBatch.SafeBegin(default, new(null, SamplerState.PointClamp, null, null), null, Main.UIScaleMatrix, () =>
+
+            spriteBatch.End();
+            spriteBatch.Begin(default, null, SamplerState.PointClamp, null, null, null, Main.UIScaleMatrix);
+            if (DamageStatsSystem.LastPlayerHPGraph is not null)
             {
-                if (DamageStatsSystem.LastPlayerHPGraph is not null)
-                {
-                    spriteBatch.Draw(DamageStatsSystem.LastPlayerHPGraph, dim, Color.White);
-                }
-            });
+                spriteBatch.Draw(DamageStatsSystem.LastPlayerHPGraph, dim, Color.White);
+            }
+
+            spriteBatch.End();
+            spriteBatch.Begin(default, null, default, null, null, null, Main.UIScaleMatrix);
+
         }
     }
 
@@ -421,7 +395,7 @@ namespace TestingEfficiency.Helpers
 
         public static SaveTestBox saveTextBox = new();
 
-        public static Dictionary<BossTestData,SaveTestBox> testBoxes = new();
+        public static Dictionary<BossTestData, SaveTestBox> testBoxes = new();
 
         public static UIList Outputs = new();
         UIScrollbar scrollbar = new();
@@ -475,7 +449,7 @@ namespace TestingEfficiency.Helpers
                 if (!testBoxes.Keys.Contains(test))
                 {
                     var t = new SaveTestBox(test);
-                    testBoxes.Add(test,t);
+                    testBoxes.Add(test, t);
                 }
             }
 
@@ -669,9 +643,9 @@ namespace TestingEfficiency.Helpers
             GearLabel.TextOriginY = 0.5f;
 
 
-            Height.Set(56 * 5 +  16, 0);
+            Height.Set(56 * 5 + 16, 0);
             text.Top.Set(10, 0);
-            text.SetText(isLatest ? "Last Test Export Details" : "", 0.75f,true);
+            text.SetText(isLatest ? "Last Test Export Details" : "", 0.75f, true);
 
 
 
@@ -713,7 +687,7 @@ namespace TestingEfficiency.Helpers
             if (textToUse is not null)
             {
                 text.SetText(textToUse.Invoke());
-                var t = ChatManager.GetStringSize(FontAssets.MouseText.Value,textToUse.Invoke(),Vector2.One);
+                var t = ChatManager.GetStringSize(FontAssets.MouseText.Value, textToUse.Invoke(), Vector2.One);
                 Height.Set(t.Y + 12, 0);
 
             }
@@ -787,16 +761,19 @@ namespace TestingEfficiency.Helpers
             };
             summon.activePredicate = () => active == 3;
             rogue.Left.Set(52 * (4), 0);
-            Main.instance.LoadItem(ModContent.ItemType<RogueEmblem>());
-            rogue.image = TextureAssets.Item[ModContent.ItemType<RogueEmblem>()];
-            rogue.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
+            if (TestingEfficiency.CalamityLoaded)
             {
-                currentClassLoadouts = TestingLoadouts.Instance.rogueLoadouts;
-                refreshSearch();
-                active = 4;
-            };
-            rogue.activePredicate = () => active == 4;
-
+                int id = TestingEfficiency.CalamityMod.Find<ModItem>("RogueEmblem").Type;
+                Main.instance.LoadItem(id);
+                rogue.image = TextureAssets.Item[id];
+                rogue.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
+                {
+                    currentClassLoadouts = TestingLoadouts.Instance.rogueLoadouts;
+                    refreshSearch();
+                    active = 4;
+                };
+                rogue.activePredicate = () => active == 4;
+            }
 
             loadouts.Top.Set(52, 0);
             loadouts.Width.Set(0, 1);
@@ -807,7 +784,8 @@ namespace TestingEfficiency.Helpers
             Append(ranged);
             Append(summon);
             Append(magic);
-            Append(rogue);
+            if (TestingEfficiency.CalamityLoaded)
+                Append(rogue);
             Append(loadouts);
 
             addInput.Height.Set(48, 0);
@@ -985,7 +963,12 @@ namespace TestingEfficiency.Helpers
             LifeIcon.Top.Set(0, 0);
             LifeIcon.SetPadding(0);
             LifeIcon.drawBG = false;
-            LifeIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.playerLifeTotal += Helpers.playerLifeTotal >= 600 ? -500 : Helpers.playerLifeTotal >= 500 ? 25 : Helpers.playerLifeTotal >= 400 ? 100 : 300;
+            LifeIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => {
+                if (TestingEfficiency.CalamityLoaded)
+                    Helpers.playerLifeTotal += Helpers.playerLifeTotal >= 600 ? -500 : Helpers.playerLifeTotal >= 500 ? 25 : Helpers.playerLifeTotal >= 400 ? 100 : 300;
+                else
+                    Helpers.playerLifeTotal += Helpers.playerLifeTotal >= 500 ? -400 : Helpers.playerLifeTotal >= 400 ? 100 : 300;
+                    };
             LifeIcon.image = TextureAssets.Item[ItemID.LifeCrystal];
             Main.instance.LoadItem(ItemID.LifeCrystal);
 
@@ -1001,7 +984,13 @@ namespace TestingEfficiency.Helpers
             ManaIcon.Top.Set(32, 0);
             ManaIcon.SetPadding(0);
             ManaIcon.drawBG = false;
-            ManaIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.playerManaTotal += Helpers.playerManaTotal >= 350 ? -330 : Helpers.playerManaTotal >= 200 ? 50 : 180;
+            ManaIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
+            {
+                if (TestingEfficiency.CalamityLoaded)
+                    Helpers.playerManaTotal += Helpers.playerManaTotal >= 350 ? -330 : Helpers.playerManaTotal >= 200 ? 50 : 180;
+                else
+                    Helpers.playerManaTotal += Helpers.playerManaTotal >= 200 ? -180 : 60;
+            };
             ManaIcon.image = TextureAssets.Item[ItemID.ManaCrystal];
             Main.instance.LoadItem(ItemID.ManaCrystal);
 
@@ -1014,46 +1003,57 @@ namespace TestingEfficiency.Helpers
             ManaSlider.FilledColor = Color.RoyalBlue;
             ManaSlider.OnLeftClick += AdjustManaSlider;
 
-
-            RageIcon.Width = RageIcon.Height = new(32, 0);
-            RageIcon.Top.Set(64, 0);
-            RageIcon.SetPadding(2);
-            RageIcon.drawBG = false;
-            RageIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.rageBoostUsed += (Helpers.rageBoostUsed < 3 ? 1 : -3);
-            RageIcon.image = TextureAssets.Item[ModContent.ItemType<MushroomPlasmaRoot>()];
-            Main.instance.LoadItem(ModContent.ItemType<MushroomPlasmaRoot>());
-
-            RageSlider.Left.Set((32), 0f);
-            RageSlider.Width.Set(-32, 1f);
-            RageSlider.Height.Set(16, 0);
-            RageSlider.Top.Set(8 + RageIcon.Top.Pixels, 0);
-            RageSlider.EmptyColor = Color.LightGray;
-            RageSlider.FilledColor = Color.Lerp(Color.DarkOrange, Color.IndianRed, 0.25f);
-            RageSlider.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
+            if (TestingEfficiency.CalamityLoaded)
             {
-                var dim = listeningElement.GetDimensions();
-                Helpers.rageBoostUsed = (int)(MathHelper.Clamp((evt.MousePosition.X - dim.Position().X) / (float)(dim.Width) + 0.1666f, 0, 1) * 3);
-            };
+                int id = TestingEfficiency.CalamityMod.Find<ModItem>("MushroomPlasmaRoot").Type;
+                Main.instance.LoadItem(id);
+                CelestialOnionIcon.image = TextureAssets.Item[id];
+                CelestialOnionIcon.activePredicate = () => Helpers.CalAccessory;
+                CelestialOnionIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Helpers.CalAccessory = !Helpers.CalAccessory;
+                CelestialOnionIcon.SetPadding(6);
 
-            AdrenIcon.Width = AdrenIcon.Height = new(32, 0);
-            AdrenIcon.Top.Set(96, 0);
-            AdrenIcon.SetPadding(1);
-            AdrenIcon.drawBG = false;
-            AdrenIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.adrenBoostUsed += (Helpers.adrenBoostUsed < 3 ? 1 : -3);
-            AdrenIcon.image = TextureAssets.Item[ModContent.ItemType<ElectrolyteGelPack>()];
-            Main.instance.LoadItem(ModContent.ItemType<ElectrolyteGelPack>());
 
-            AdrenSlider.Left.Set((32), 0f);
-            AdrenSlider.Width.Set(-32, 1f);
-            AdrenSlider.Height.Set(16, 0);
-            AdrenSlider.Top.Set(8 + AdrenIcon.Top.Pixels, 0);
-            AdrenSlider.EmptyColor = Color.LightGray;
-            AdrenSlider.FilledColor = Color.Lerp(Color.SpringGreen, Color.Black, 0.4f);
-            AdrenSlider.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
-            {
-                var dim = listeningElement.GetDimensions();
-                Helpers.adrenBoostUsed = (int)(MathHelper.Clamp((evt.MousePosition.X - dim.Position().X) / (float)(dim.Width) + 0.1666f, 0, 1) * 3);
-            };
+                RageIcon.Width = RageIcon.Height = new(32, 0);
+                RageIcon.Top.Set(64, 0);
+                RageIcon.SetPadding(2);
+                RageIcon.drawBG = false;
+                RageIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.rageBoostUsed += (Helpers.rageBoostUsed < 3 ? 1 : -3);
+                RageIcon.image = TextureAssets.Item[id];
+                Main.instance.LoadItem(id);
+
+                RageSlider.Left.Set((32), 0f);
+                RageSlider.Width.Set(-32, 1f);
+                RageSlider.Height.Set(16, 0);
+                RageSlider.Top.Set(8 + RageIcon.Top.Pixels, 0);
+                RageSlider.EmptyColor = Color.LightGray;
+                RageSlider.FilledColor = Color.Lerp(Color.DarkOrange, Color.IndianRed, 0.25f);
+                RageSlider.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
+                {
+                    var dim = listeningElement.GetDimensions();
+                    Helpers.rageBoostUsed = (int)(MathHelper.Clamp((evt.MousePosition.X - dim.Position().X) / (float)(dim.Width) + 0.1666f, 0, 1) * 3);
+                };
+
+                id = TestingEfficiency.CalamityMod.Find<ModItem>("ElectrolyteGelPack").Type;
+                AdrenIcon.Width = AdrenIcon.Height = new(32, 0);
+                AdrenIcon.Top.Set(96, 0);
+                AdrenIcon.SetPadding(1);
+                AdrenIcon.drawBG = false;
+                AdrenIcon.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) => Helpers.adrenBoostUsed += (Helpers.adrenBoostUsed < 3 ? 1 : -3);
+                AdrenIcon.image = TextureAssets.Item[id];
+                Main.instance.LoadItem(id);
+
+                AdrenSlider.Left.Set((32), 0f);
+                AdrenSlider.Width.Set(-32, 1f);
+                AdrenSlider.Height.Set(16, 0);
+                AdrenSlider.Top.Set(8 + AdrenIcon.Top.Pixels, 0);
+                AdrenSlider.EmptyColor = Color.LightGray;
+                AdrenSlider.FilledColor = Color.Lerp(Color.SpringGreen, Color.Black, 0.4f);
+                AdrenSlider.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
+                {
+                    var dim = listeningElement.GetDimensions();
+                    Helpers.adrenBoostUsed = (int)(MathHelper.Clamp((evt.MousePosition.X - dim.Position().X) / (float)(dim.Width) + 0.1666f, 0, 1) * 3);
+                };
+            }
             #endregion
 
             #region toggles
@@ -1102,11 +1102,15 @@ namespace TestingEfficiency.Helpers
             DemonHeartIcon.activePredicate = () => Main.LocalPlayer.extraAccessory;
             DemonHeartIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.extraAccessory.Invert();
 
-            Main.instance.LoadItem(ModContent.ItemType<CelestialOnion>());
-            CelestialOnionIcon.image = TextureAssets.Item[ModContent.ItemType<CelestialOnion>()];
-            CelestialOnionIcon.activePredicate = () => Main.LocalPlayer.Calamity().extraAccessoryML;
-            CelestialOnionIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.LocalPlayer.Calamity().extraAccessoryML.Invert();
-            CelestialOnionIcon.SetPadding(6);
+            if (TestingEfficiency.CalamityLoaded)
+            {
+                int id = TestingEfficiency.CalamityMod.Find<ModItem>("CelestialOnion").Type;
+                Main.instance.LoadItem(id);
+                CelestialOnionIcon.image = TextureAssets.Item[id];
+                CelestialOnionIcon.activePredicate = () => Helpers.CalAccessory;
+                CelestialOnionIcon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Helpers.CalAccessory = !Helpers.CalAccessory;
+                CelestialOnionIcon.SetPadding(6);
+            }
 
             Main.instance.LoadItem(ItemID.CombatBook);
             AdvancedCombatIcon.image = TextureAssets.Item[ItemID.CombatBook];
@@ -1123,15 +1127,20 @@ namespace TestingEfficiency.Helpers
             Append(LifeSlider);
             Append(ManaIcon);
             Append(ManaSlider);
-            Append(RageIcon);
-            Append(RageSlider);
-            Append(AdrenIcon);
-            Append(AdrenSlider);
+            if (TestingEfficiency.CalamityLoaded)
+            {
+                Append(RageIcon);
+                Append(RageSlider);
+                Append(AdrenIcon);
+                Append(AdrenSlider);
+            }
+            else
+                miscUpgrades.Remove(CelestialOnionIcon);
 
             for (int i = 0; i < miscUpgrades.Count; i++)
             {
                 var item = miscUpgrades[i];
-                item.Top.Set(52 * (i / 4) + 36 + AdrenIcon.Top.Pixels, 0);
+                item.Top.Set(52 * (i / 4) + 36 + (TestingEfficiency.CalamityLoaded ? AdrenIcon.Top.Pixels : ManaIcon.Top.Pixels), 0);
                 item.Left.Set(52 * (i % 4), 0);
                 item.SetPadding(0);
                 Append(item);
@@ -1141,13 +1150,13 @@ namespace TestingEfficiency.Helpers
         private void AdjustLifeSlider(UIMouseEvent evt, UIElement listeningElement)
         {
             var dim = listeningElement.GetDimensions();
-            Helpers.playerLifeTotal = (int)(MathHelper.Clamp((evt.MousePosition.X - dim.Position().X) / (float)(dim.Width) + 0.05f, 0, 1) * 600);
+            Helpers.playerLifeTotal = (int)(MathHelper.Clamp((evt.MousePosition.X - dim.Position().X) / (float)(dim.Width) + 0.05f, 0, 1) * (TestingEfficiency.CalamityLoaded ? 600 : 500));
         }
 
         private void AdjustManaSlider(UIMouseEvent evt, UIElement listeningElement)
         {
             var dim = listeningElement.GetDimensions();
-            Helpers.playerManaTotal = (int)(MathHelper.Clamp((evt.MousePosition.X - dim.Position().X) / (float)(dim.Width) + 0.05f, 0, 1) * 350);
+            Helpers.playerManaTotal = (int)(MathHelper.Clamp((evt.MousePosition.X - dim.Position().X) / (float)(dim.Width) + 0.05f, 0, 1) * (TestingEfficiency.CalamityLoaded ? 350 : 200));
         }
 
         public override void Update(GameTime gameTime)
@@ -1184,70 +1193,18 @@ namespace TestingEfficiency.Helpers
         UIPanel ToggleAll = new();
         UIText ToggleText = new("Toggle All");
 
-        UIImageButtonBorder KS = new();
-        UIImageButtonBorder DS = new();
-        UIImageButtonBorder EoC = new();
-        UIImageButtonBorder Crab = new();
-        UIImageButtonBorder Evil1 = new();
-        UIImageButtonBorder Evil2 = new();
-        UIImageButtonBorder QB = new();
-        UIImageButtonBorder Deer = new();
-        UIImageButtonBorder Skeletron = new();
-        UIImageButtonBorder SG = new();
-        UIImageButtonBorder WoF = new();
-
-
-        UIImageButtonBorder Clam = new();
-        UIImageButtonBorder QS = new();
-        UIImageButtonBorder Cryo = new();
-        UIImageButtonBorder Twin = new();
-        UIImageButtonBorder AS = new();
-        UIImageButtonBorder Dest = new();
-        UIImageButtonBorder Brim = new();
-        UIImageButtonBorder Prime = new();
-        UIImageButtonBorder Clone = new();
-        UIImageButtonBorder Plant = new();
-
-        UIImageButtonBorder Levi = new();
-        UIImageButtonBorder Aureus = new();
-        UIImageButtonBorder Golem = new();
-        UIImageButtonBorder Duke = new();
-        UIImageButtonBorder PBG = new();
-        UIImageButtonBorder EoL = new();
-        UIImageButtonBorder Ravager = new();
-        UIImageButtonBorder Cultist = new();
-        UIImageButtonBorder Deus = new();
-        UIImageButtonBorder ML = new();
-
-        UIImageButtonBorder Folly = new();
-        UIImageButtonBorder PG = new();
-        UIImageButtonBorder Prov = new();
-        UIImageButtonBorder CV = new();
-        UIImageButtonBorder SW = new();
-        UIImageButtonBorder Signus = new();
-        UIImageButtonBorder Polter = new();
-        UIImageButtonBorder OD = new();
-        UIImageButtonBorder DoG = new();
-        UIImageButtonBorder Yharon = new();
-        UIImageButtonBorder Exo = new();
-        UIImageButtonBorder Scal = new();
-        UIImageButtonBorder Wyrm = new();
-
         List<List<UIImageButtonBorder>> allBosses => [
             prehardmode, hardmode, postplant, postml
             ];
 
-        List<UIImageButtonBorder> prehardmode => [
-            KS, DS, EoC, Crab, Evil1, Evil2, QB, Deer, Skeletron, SG, WoF
+        List<UIImageButtonBorder> prehardmode = [
+
             ];
-        List<UIImageButtonBorder> hardmode => [
-            QS, Cryo, Twin, AS, Dest, Brim, Prime, Clone, Plant
+        List<UIImageButtonBorder> hardmode = [
             ];
-        List<UIImageButtonBorder> postplant => [
-            Levi, Aureus, Golem, Duke, PBG, EoL, Ravager, Cultist, Deus, ML
+        List<UIImageButtonBorder> postplant = [
             ];
-        List<UIImageButtonBorder> postml => [
-            Folly, PG, Prov, CV, SW, Signus, Polter, OD, DoG, Yharon, Scal, Exo, Wyrm
+        List<UIImageButtonBorder> postml = [
             ];
 
         List<UIImageButtonBorder> all
@@ -1267,201 +1224,29 @@ namespace TestingEfficiency.Helpers
 
         public override void OnInitialize()
         {
-            #region prehardmode
-            KS.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.KingSlime]]);
-            KS.activePredicate = () => NPC.downedSlimeKing;
-            KS.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedSlimeKing.Invert();
-
-            DS.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<DesertScourgeHead>()]]);
-            DS.activePredicate = () => DownedBossSystem.downedDesertScourge;
-            DS.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedDesertScourge = !DownedBossSystem.downedDesertScourge;
-
-            EoC.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.EyeofCthulhu]]);
-            EoC.activePredicate = () => NPC.downedBoss1;
-            EoC.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedBoss1.Invert();
-
-            Crab.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<Crabulon>()]]);
-            Crab.activePredicate = () => DownedBossSystem.downedCrabulon;
-            Crab.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedCrabulon = !DownedBossSystem.downedCrabulon;
-
-            Evil1.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.EaterofWorldsHead]]);
-            Evil1.secondaryImage = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.BrainofCthulhu]], () => WorldGen.crimson);
-            Evil1.activePredicate = () => NPC.downedBoss2;
-            Evil1.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedBoss2.Invert();
-
-            Evil2.image = (TextureAssets.NpcHeadBoss[HiveMind.phase2IconIndex]);
-            Evil2.secondaryImage = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<PerforatorHive>()]], () => WorldGen.crimson);
-            Evil2.activePredicate = () => (DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator);
-            Evil2.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedHiveMind = DownedBossSystem.downedPerforator = !Evil2.activePredicate();
-
-            QB.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.QueenBee]]);
-            QB.activePredicate = () => NPC.downedQueenBee;
-            QB.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedQueenBee.Invert();
-
-            Deer.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.Deerclops]]);
-            Deer.activePredicate = () => NPC.downedDeerclops;
-            Deer.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedDeerclops.Invert();
-
-            Skeletron.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.SkeletronHead]]);
-            Skeletron.activePredicate = () => NPC.downedBoss3;
-            Skeletron.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedBoss3.Invert();
-
-            SG.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<SlimeGodCore>()]]);
-            SG.activePredicate = () => DownedBossSystem.downedSlimeGod;
-            SG.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedSlimeGod = !DownedBossSystem.downedSlimeGod;
-
-            WoF.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.WallofFlesh]]);
-            WoF.activePredicate = () => Main.hardMode;
-            WoF.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => Main.hardMode.Invert();
-            #endregion
-
-            #region hm
-            QS.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.QueenSlimeBoss]]);
-            QS.activePredicate = () => NPC.downedQueenSlime;
-            QS.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedQueenSlime.Invert();
-
-            Cryo.image = (TextureAssets.NpcHeadBoss[Cryogen.cryoIconIndex]);
-            Cryo.activePredicate = () => DownedBossSystem.downedCryogen;
-            Cryo.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedCryogen = !DownedBossSystem.downedCryogen;
-
-            Twin.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.Spazmatism]]);
-            Twin.activePredicate = () => NPC.downedMechBoss2;
-            Twin.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
+            foreach (var item in allBosses)
             {
-                NPC.downedMechBoss2.Invert();
-                NPC.downedMechBossAny = (NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3);
-            };
-
-            AS.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<AquaticScourgeHead>()]]);
-            AS.activePredicate = () => DownedBossSystem.downedAquaticScourge;
-            AS.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedAquaticScourge = !DownedBossSystem.downedAquaticScourge;
-
-            Dest.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.TheDestroyer]]);
-            Dest.activePredicate = () => NPC.downedMechBoss1;
-            Dest.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
+                item.Clear();   
+            }
+            foreach (var boss in TestingEfficiency.BossTogles.OrderBy(x => x.tier))
             {
-                NPC.downedMechBoss1.Invert();
-                NPC.downedMechBossAny = (NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3);
-            };
+                UIImageButtonBorder button = new();
 
-            Brim.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<BrimstoneElemental>()]]);
-            Brim.activePredicate = () => DownedBossSystem.downedBrimstoneElemental;
-            Brim.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedBrimstoneElemental = !DownedBossSystem.downedBrimstoneElemental;
+                button.image = boss.texture();
+               button.activePredicate = boss.getter;
+                button.OnLeftClick += (_, _) => boss.setter(!boss.getter());
 
-            Prime.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.SkeletronPrime]]);
-            Prime.activePredicate = () => NPC.downedMechBoss3;
-            Prime.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) =>
-            {
-                NPC.downedMechBoss3.Invert();
-                NPC.downedMechBossAny = (NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3);
-            };
+                if (boss.tier > 17)
+                    postml.Add(button);
 
-            Clone.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<CalamitasClone>()]]);
-            Clone.activePredicate = () => DownedBossSystem.downedCalamitasClone;
-            Clone.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedCalamitasClone = !DownedBossSystem.downedCalamitasClone;
+                else if (boss.tier > 12)
+                    postplant.Add(button);
 
-            Plant.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.Plantera]]);
-            Plant.activePredicate = () => NPC.downedPlantBoss;
-            Plant.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedPlantBoss.Invert();
-
-            #endregion
-
-            #region postplant
-            Levi.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<Leviathan>()]]);
-            Levi.activePredicate = () => DownedBossSystem.downedLeviathan;
-            Levi.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedLeviathan = !DownedBossSystem.downedLeviathan;
-
-            Aureus.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<AstrumAureus>()]]);
-            Aureus.activePredicate = () => DownedBossSystem.downedAstrumAureus;
-            Aureus.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedAstrumAureus = !DownedBossSystem.downedAstrumAureus;
-
-            Golem.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.GolemHead]]);
-            Golem.activePredicate = () => NPC.downedGolemBoss;
-            Golem.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedGolemBoss.Invert();
-
-            Duke.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.DukeFishron]]);
-            Duke.activePredicate = () => NPC.downedFishron;
-            Duke.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedFishron.Invert();
-
-            PBG.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<PlaguebringerGoliath>()]]);
-            PBG.activePredicate = () => DownedBossSystem.downedPlaguebringer;
-            PBG.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedPlaguebringer = !DownedBossSystem.downedPlaguebringer;
-
-            EoL.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.HallowBoss]]);
-            EoL.activePredicate = () => NPC.downedEmpressOfLight;
-            EoL.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedEmpressOfLight.Invert();
-
-            Ravager.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<RavagerBody>()]]);
-            Ravager.activePredicate = () => DownedBossSystem.downedRavager;
-            Ravager.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedRavager = !DownedBossSystem.downedRavager;
-
-            Cultist.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.CultistBoss]]);
-            Cultist.activePredicate = () => NPC.downedAncientCultist;
-            Cultist.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedAncientCultist.Invert();
-
-            Deus.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<AstrumDeusHead>()]]);
-            Deus.activePredicate = () => DownedBossSystem.downedAstrumDeus;
-            Deus.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedAstrumDeus = !DownedBossSystem.downedAstrumDeus;
-
-            ML.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[NPCID.MoonLordHead]]);
-            ML.activePredicate = () => NPC.downedMoonlord;
-            ML.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => NPC.downedMoonlord.Invert();
-            #endregion
-
-            #region post-ml
-
-            Folly.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<Dragonfolly>()]]);
-            Folly.activePredicate = () => DownedBossSystem.downedDragonfolly;
-            Folly.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedDragonfolly = !DownedBossSystem.downedDragonfolly;
-
-            PG.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<ProfanedGuardianHealer>()]]);
-            PG.activePredicate = () => DownedBossSystem.downedGuardians;
-            PG.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedGuardians = !DownedBossSystem.downedGuardians;
-
-            Prov.image = (TextureAssets.Item[ModContent.ItemType<ProfanedCore>()]);
-            Prov.activePredicate = () => DownedBossSystem.downedProvidence;
-            Prov.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedProvidence = !DownedBossSystem.downedProvidence;
-
-            CV.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<CeaselessVoid>()]]);
-            CV.activePredicate = () => DownedBossSystem.downedCeaselessVoid;
-            CV.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedCeaselessVoid = !DownedBossSystem.downedCeaselessVoid;
-
-            SW.image = (TextureAssets.NpcHeadBoss[StormWeaverHead.normalIconIndex]);
-            SW.activePredicate = () => DownedBossSystem.downedStormWeaver;
-            SW.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedStormWeaver = !DownedBossSystem.downedStormWeaver;
-
-            Signus.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<Signus>()]]);
-            Signus.activePredicate = () => DownedBossSystem.downedSignus;
-            Signus.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedSignus = !DownedBossSystem.downedSignus;
-
-            Polter.image = (TextureAssets.NpcHeadBoss[Polterghast.phase1IconIndex]);
-            Polter.activePredicate = () => DownedBossSystem.downedPolterghast;
-            Polter.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedPolterghast = !DownedBossSystem.downedPolterghast;
-
-            OD.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<OldDuke>()]]);
-            OD.activePredicate = () => DownedBossSystem.downedBoomerDuke;
-            OD.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedBoomerDuke = !DownedBossSystem.downedBoomerDuke;
-
-            DoG.image = (TextureAssets.NpcHeadBoss[DevourerofGodsHead.phase1IconIndex]);
-            DoG.activePredicate = () => DownedBossSystem.downedDoG;
-            DoG.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedDoG = !DownedBossSystem.downedDoG;
-
-            Yharon.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<Yharon>()]]);
-            Yharon.activePredicate = () => DownedBossSystem.downedYharon;
-            Yharon.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedYharon = !DownedBossSystem.downedYharon;
-
-            Exo.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<AresBody>()]]);
-            Exo.activePredicate = () => DownedBossSystem.downedExoMechs;
-            Exo.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedExoMechs = !DownedBossSystem.downedExoMechs;
-
-            Scal.image = (TextureAssets.NpcHeadBoss[SupremeCalamitas.hoodedHeadIconIndex]);
-            Scal.activePredicate = () => DownedBossSystem.downedCalamitas;
-            Scal.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedCalamitas = !DownedBossSystem.downedCalamitas;
-
-            Wyrm.image = (TextureAssets.NpcHeadBoss[NPCID.Sets.BossHeadTextures[ModContent.NPCType<PrimordialWyrmHead>()]]);
-            Wyrm.activePredicate = () => DownedBossSystem.downedPrimordialWyrm;
-            Wyrm.OnLeftClick += (UIMouseEvent evt, UIElement listeningElement) => DownedBossSystem.downedPrimordialWyrm = !DownedBossSystem.downedPrimordialWyrm;
-            #endregion
+                else if (boss.tier > 7)
+                    hardmode.Add(button);
+                else
+                    prehardmode.Add(button);
+            }
 
             Aftermath.Width = new(-4, 0.5f);
             Aftermath.OnLeftClick += (UIMouseEvent evt, UIElement listener) =>
@@ -1513,9 +1298,15 @@ namespace TestingEfficiency.Helpers
                 }
             }
 
+            var longest = 0;
+            foreach (var item in allBosses)
+            {
+                if (item.Count() > longest)
+                    longest = item.Count();
+            }
 
             Width.Set(52 * allBosses.Count() + 16, 0);
-            Height.Set(52 * (postml.Count() + 1) + 16, 0);
+            Height.Set(52 * (longest + 1) + 16, 0);
             Top.Set(16, 0);
             Left.Set(-(Width.Pixels + 48 + PaddingLeft * 2 + 8), 0.75f);
             initialized = true;
@@ -1528,7 +1319,7 @@ namespace TestingEfficiency.Helpers
             var active = true;
             foreach (var item in allList)
             {
-                if (item.activePredicate.Invoke() != active)
+                if (item.activePredicate?.Invoke() != active)
                     item.LeftClick(evt);
 
                 if (item == clicked)
@@ -1547,6 +1338,7 @@ namespace TestingEfficiency.Helpers
                     item.Initialize();
                 }
             }
+
             foreach (var item in Children)
             {
                 item.Update(gameTime);

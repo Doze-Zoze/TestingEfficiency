@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using CalamityMod.Items.PermanentBoosters;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -7,24 +6,24 @@ namespace TestingEfficiency.Commands;
 
 public class ReforgeCmd : ModCommand
 {
-	public override CommandType Type => CommandType.Chat;
+    public override CommandType Type => CommandType.Chat;
 
-	public override string Command => "reforge";
+    public override string Command => "reforge";
 
-	public override string Description => "Reforge Accessories";
+    public override string Description => "Reforge Accessories";
 
-	public override void Action(CommandCaller caller, string input, string[] args)
-	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Expected O, but got Unknown
-		Player player = caller.Player;
+    public override void Action(CommandCaller caller, string input, string[] args)
+    {
+        //IL_0007: Unknown result type (might be due to invalid IL or missing references)
+        //IL_000d: Expected O, but got Unknown
+        Player player = caller.Player;
         ApplyReforge(player, args);
 
 
     }
 
-	public static void ApplyReforge(Player player, string[] args)
-	{
+    public static void ApplyReforge(Player player, string[] args)
+    {
         string errorMsg = string.Empty;
         Dictionary<string, int> preset = new Dictionary<string, int>
         {

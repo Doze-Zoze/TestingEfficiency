@@ -13,11 +13,13 @@
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup />
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CalamityMod">
-      <HintPath>..\..\ModReader\CalamityMod\CalamityMod.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\CalamityMod\CalamityMod.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="SubworldLibrary">
       <HintPath>..\..\dependencies\SubworldLibrary.dll</HintPath>
     </Reference>

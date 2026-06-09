@@ -1,7 +1,3 @@
-using CalamityMod.Buffs.Summon;
-using CalamityMod.Events;
-using CalamityMod.NPCs;
-using CalamityMod.Projectiles.Pets;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,7 +8,6 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
-using TestingEfficiency.Helpers;
 using static TestingEfficiency.DataStructures;
 
 namespace TestingEfficiency.DamageStats;
@@ -39,6 +34,7 @@ public class DamageStatsSystem : ModSystem
     public static Dictionary<NPCData, Dictionary<DamageSourceData, int>> DoTData = new Dictionary<NPCData, Dictionary<DamageSourceData, int>>();
 
     public static List<int> HPGraphList_Boss = new List<int>();
+    public static List<int> HPGraphList_BossMinion = new List<int>();
     public static List<int> HPGraphList_Player = new List<int>();
     public static int MaxHPGraph_Player = 0;
 
@@ -87,7 +83,7 @@ public class DamageStatsSystem : ModSystem
     }
     public override void PostUpdateEverything()
     {
-        if (Main.npc.Any(x => x.active && (x.boss || DamageStatsRecorder.countsAsBoss.Contains(x.type))))
+        if (Main.npc.Any(x => x.active && (x.boss || IDSets.ShouldTrackAsABoss[x.type])))
         {
             if (!isBossAlive)
             {
@@ -95,17 +91,23 @@ public class DamageStatsSystem : ModSystem
                 bossTimeIGT = 0;
                 bossTimeRTA = DateTime.UtcNow;
                 HPGraphList_Boss = new();
+                HPGraphList_BossMinion = new();
                 HPGraphList_Player = new();
                 MaxHPGraph_Player = 0;
             }
             if (bossTimeIGT % 15 == 0)
             {
                 int bossHPTotal = 0;
+                int minionHPTotal = 0;
                 foreach (var item in Main.ActiveNPCs)
                 {
-                    if ((item.boss || DamageStatsRecorder.countsAsBoss.Contains(item.type)) && !DamageStatsRecorder.blacklist.Contains(item.type))
+                    if (DamageStatsRecorder.ShouldRecord(item) && !IDSets.ShouldBlacklist[item.type])
                     {
                         bossHPTotal += item.life;
+                    }
+                    else if (IDSets.ShouldMergeInstances[item.type])
+                    {
+                        minionHPTotal += item.life;
                     }
                 }
 
@@ -118,6 +120,7 @@ public class DamageStatsSystem : ModSystem
                 }
 
                 HPGraphList_Boss.Add(bossHPTotal);
+                HPGraphList_BossMinion.Add(minionHPTotal);
                 HPGraphList_Player.Add(playerHPTotal);
                 MaxHPGraph_Player = Math.Max(MaxHPGraph_Player, playerMaxHP);
             }
@@ -130,16 +133,16 @@ public class DamageStatsSystem : ModSystem
             string rta = "";
             string igt = "";
             bool printed = false;
-            (string name,int dmgdone) bossName = ("",0);
+            (string name, int dmgdone) bossName = ("", 0);
             if (DamageData.Count > 0)
                 lastSplits = null;
             foreach (var npc in DamageData)
                 if ((npc.Key.Index == -1) ? true : !Main.npc[npc.Key.Index].active || (Main.npc[npc.Key.Index].type != npc.Key.Type))
-                
+
                 //^ if there's no active bosses and this NPC isn't active anymore, we'll print out the damage results. We only do this if there's no active bosses so that bosses such as Moon Lord get all the data printed at the end of the fight and not throughout.
                 {
-                    if (CalamityGlobalNPC.BossKillTimes.Keys.Contains(npc.Key.Type))
-                        goalTime = (int)MathHelper.Max(goalTime, CalamityGlobalNPC.BossKillTimes[npc.Key.Type]);
+                    if (IDSets.BossKillTimes[npc.Key.Type] != -1)
+                        goalTime = (int)MathHelper.Max(goalTime, IDSets.BossKillTimes[npc.Key.Type]);
                     int totaldmg = 0;
                     foreach (KeyValuePair<DamageSourceData, int> i in npc.Value.OrderBy(key => key.Value)) //for each damage source, add that damage amount to the total damage counter
                     {
@@ -153,7 +156,7 @@ public class DamageStatsSystem : ModSystem
                     foreach (KeyValuePair<DamageSourceData, int> i in npc.Value.OrderBy(key => -key.Value)) //Runs for each damage source, sorted from highest damage dealt to lowest damage deal
                     {
                         var l = ConstructDamageLine(i, totaldmg);
-                        output += $"\n{l.Item1}: [c/ f7d57e:{l.Item2}] [c/ ababab:{l.Item3}]"; //Prepare print out the damage source, the % of the total damage from that source, and the actual value of damage from that
+                        output += $"\n{l.Item1}: [c/f7d57e:{l.Item2}] [c/ababab:{l.Item3}]"; //Prepare print out the damage source, the % of the total damage from that source, and the actual value of damage from that
                     }
 
                     //DoT
@@ -191,7 +194,12 @@ public class DamageStatsSystem : ModSystem
             {
                 if (HPGraphList_Boss.Count() > 0)
                 {
-                    int maxHP = HPGraphList_Boss.Max();
+                    List<int> totalHP = new List<int>();
+                    for (var i = 0; i < HPGraphList_Boss.Count(); i++)
+                    {
+                        totalHP.Add(HPGraphList_Boss[i] + HPGraphList_BossMinion[i]);
+                    }
+                    int maxHP = totalHP.Max();
 
                     LastBossHPGraph = new Texture2D(Main.graphics.GraphicsDevice, HPGraphList_Boss.Count(), 100);
 
@@ -200,7 +208,7 @@ public class DamageStatsSystem : ModSystem
                     {
                         int x = i % HPGraphList_Boss.Count();
                         int y = i / HPGraphList_Boss.Count();
-                        texData[i] = (1 - (y / 100f) > HPGraphList_Boss[x] / (float)maxHP) ? new Color(52, 66, 119) : (x % 120 < 60 ? Color.White : Color.WhiteSmoke);
+                        texData[i] = (1 - (y / 100f) > HPGraphList_Boss[x] / (float)maxHP) ? ((1 - (y / 100f) > totalHP[x] / (float)maxHP) ? new Color(52, 66, 119) : (x % 120 < 60 ? new Color(255, 215, 215) : new Color(245, 205, 205))) : (x % 120 < 60 ? Color.White : Color.WhiteSmoke);
                     }
                     LastBossHPGraph.SetData(texData);
                 }
@@ -253,7 +261,7 @@ public class DamageStatsSystem : ModSystem
                 lastIGT = $"[c/fab698:Duration] [c/ababab:({goalText} Goal)]\n{igt} IGT - {rta} RTA";
                 lastTestData = new();
 
-                lastTestData.time = bossTimeIGT/60;
+                lastTestData.time = bossTimeIGT / 60;
 
                 if (!Main.player.Any(x => x.active && !x.dead))
                     lastTestData.died = (HPGraphList_Boss.Last() / (float)HPGraphList_Boss.Max());
@@ -298,7 +306,7 @@ public class DamageStatsSystem : ModSystem
                 }
             }
         }
-        if (BossRushEvent.BossRushActive)
+        if (TestingEfficiency.CalamityLoaded && (bool)TestingEfficiency.CalamityMod.Call("Difficulty","br"))
         {
             if (bossRushTimeIGT < 1)
             {

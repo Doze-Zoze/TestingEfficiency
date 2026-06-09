@@ -1,25 +1,4 @@
-﻿using CalamityMod.DataStructures;
-using CalamityMod.NPCs.AquaticScourge;
-using CalamityMod.NPCs.AstrumDeus;
-using CalamityMod.NPCs.CalClone;
-using CalamityMod.NPCs.CeaselessVoid;
-using CalamityMod.NPCs.Cryogen;
-using CalamityMod.NPCs.DesertScourge;
-using CalamityMod.NPCs.DevourerofGods;
-using CalamityMod.NPCs.ExoMechs.Apollo;
-using CalamityMod.NPCs.ExoMechs.Ares;
-using CalamityMod.NPCs.ExoMechs.Artemis;
-using CalamityMod.NPCs.ExoMechs.Thanatos;
-using CalamityMod.NPCs.Leviathan;
-using CalamityMod.NPCs.Perforator;
-using CalamityMod.NPCs.Polterghast;
-using CalamityMod.NPCs.ProfanedGuardians;
-using CalamityMod.NPCs.Ravager;
-using CalamityMod.NPCs.SlimeGod;
-using CalamityMod.NPCs.StormWeaver;
-using CalamityMod.NPCs.SupremeCalamitas;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using Terraria;
 using Terraria.ID;
@@ -33,120 +12,7 @@ namespace TestingEfficiency.DamageStats
     {
         public override bool InstancePerEntity => true; //allow storing entity-specific data here instead of data general to all NPCs
 
-        public static Dictionary<int, int> replaceList = new Dictionary<int, int> {
-        {ModContent.NPCType<DevourerofGodsBody>(),ModContent.NPCType<DevourerofGodsHead>()},
-        {ModContent.NPCType<DevourerofGodsTail>(),ModContent.NPCType<DevourerofGodsHead>()},
-        {ModContent.NPCType<DesertScourgeBody>(),ModContent.NPCType<DesertScourgeHead>()},
-        {ModContent.NPCType<DesertScourgeTail>(),ModContent.NPCType<DesertScourgeHead>()},
-        {ModContent.NPCType<AstrumDeusBody>(),ModContent.NPCType<AstrumDeusHead>()},
-        {ModContent.NPCType<AstrumDeusTail>(),ModContent.NPCType<AstrumDeusHead>()},
-        {ModContent.NPCType<AquaticScourgeBody>(),ModContent.NPCType<AquaticScourgeHead>()},
-        {ModContent.NPCType<AquaticScourgeBodyAlt>(),ModContent.NPCType<AquaticScourgeHead>()},
-        {ModContent.NPCType<AquaticScourgeTail>(),ModContent.NPCType<AquaticScourgeHead>()},
-        {ModContent.NPCType<ThanatosBody1>(),ModContent.NPCType<ThanatosHead>()},
-        {ModContent.NPCType<ThanatosBody2>(),ModContent.NPCType<ThanatosHead>()},
-        { ModContent.NPCType < ThanatosTail >(), ModContent.NPCType < ThanatosHead >() },
-        {ModContent.NPCType<StormWeaverBody>(),ModContent.NPCType<StormWeaverHead>()},
-        {ModContent.NPCType<StormWeaverTail>(),ModContent.NPCType<StormWeaverHead>()},
-        { ModContent.NPCType < AresGaussNuke >(), ModContent.NPCType < AresBody >() },
-        { ModContent.NPCType < AresLaserCannon >(), ModContent.NPCType < AresBody >() },
-        { ModContent.NPCType < AresPlasmaFlamethrower >(), ModContent.NPCType < AresBody >() },
-        { ModContent.NPCType < AresTeslaCannon >(), ModContent.NPCType < AresBody >() },
-        { ModContent.NPCType < Apollo >(), ModContent.NPCType < Artemis >() },
-        { ModContent.NPCType < PerforatorBodyLarge >(), ModContent.NPCType < PerforatorHeadLarge >() },
-        { ModContent.NPCType < PerforatorBodyMedium >(), ModContent.NPCType < PerforatorHeadMedium >() },
-        { ModContent.NPCType < PerforatorBodySmall >(), ModContent.NPCType < PerforatorHeadSmall >() },
-        { ModContent.NPCType < PerforatorTailLarge >(), ModContent.NPCType < PerforatorHeadLarge >() },
-        { ModContent.NPCType < PerforatorTailMedium >(), ModContent.NPCType < PerforatorHeadMedium >() },
-        { ModContent.NPCType < PerforatorTailSmall >(), ModContent.NPCType < PerforatorHeadSmall >() },
-        { NPCID.WallofFleshEye, NPCID.WallofFlesh},
-        {NPCID.TheHungryII, NPCID.TheHungry },
-        {NPCID.GolemFistLeft,NPCID.Golem },
-        {NPCID.GolemFistRight,NPCID.Golem },
-        {NPCID.GolemHead,NPCID.Golem },
-        {NPCID.PrimeCannon, NPCID.SkeletronPrime },
-        {NPCID.PrimeSaw, NPCID.SkeletronPrime },
-        {NPCID.PrimeLaser, NPCID.SkeletronPrime },
-        {NPCID.PrimeVice, NPCID.SkeletronPrime },
-        {NPCID.TheDestroyerBody,NPCID.TheDestroyer },
-        {NPCID.TheDestroyerTail,NPCID.TheDestroyer },
-        {NPCID.EaterofWorldsBody,NPCID.EaterofWorldsHead },
-        {NPCID.EaterofWorldsTail,NPCID.EaterofWorldsHead },
-        { ModContent.NPCType<RavagerClawLeft>(), ModContent.NPCType<RavagerBody>()},
-        { ModContent.NPCType<RavagerClawRight>(), ModContent.NPCType<RavagerBody>()},
-        { ModContent.NPCType<RavagerHead>(), ModContent.NPCType<RavagerBody>()},
-        { ModContent.NPCType<RavagerLegLeft>(), ModContent.NPCType<RavagerBody>()},
-        { ModContent.NPCType<RavagerLegRight>(), ModContent.NPCType<RavagerBody>()},
-        { ModContent.NPCType<SplitEbonianPaladin>(), ModContent.NPCType<EbonianPaladin>()},
-        { ModContent.NPCType<SplitCrimulanPaladin>(), ModContent.NPCType<CrimulanPaladin>()}
-    };
-        public static List<int> blacklist = new List<int> {  //NPCs to blacklist
-        ModContent.NPCType<DevourerofGodsBody>(),
-        ModContent.NPCType<DevourerofGodsTail>(),
-        ModContent.NPCType<DesertScourgeBody>(),
-        ModContent.NPCType<DesertScourgeTail>(),
-        ModContent.NPCType<AstrumDeusBody>(),
-        ModContent.NPCType<AstrumDeusTail>(),
-        ModContent.NPCType<AquaticScourgeBody>(),
-        ModContent.NPCType<AquaticScourgeBodyAlt>(),
-        ModContent.NPCType<AquaticScourgeTail>(),
-        ModContent.NPCType<ThanatosBody1>(),
-        ModContent.NPCType<ThanatosBody2>(),
-        ModContent.NPCType < ThanatosTail >(),
-        ModContent.NPCType<StormWeaverBody>(),
-        ModContent.NPCType<StormWeaverTail>(),
-        ModContent.NPCType < AresGaussNuke >(),
-        ModContent.NPCType < AresLaserCannon >(),
-        ModContent.NPCType < AresPlasmaFlamethrower >(),
-        ModContent.NPCType < AresTeslaCannon >(),
-        ModContent.NPCType < Apollo >(),
-         ModContent.NPCType < RavagerClawLeft >(),
-         ModContent.NPCType < RavagerClawRight>(),
-         ModContent.NPCType < RavagerHead>(),
-         ModContent.NPCType < RavagerLegLeft >(),
-         ModContent.NPCType < RavagerLegRight>(),
-        ModContent.NPCType < PerforatorBodyLarge >(),
-        ModContent.NPCType < PerforatorBodyMedium >(),
-         ModContent.NPCType < PerforatorBodySmall >(),
-         ModContent.NPCType < PerforatorTailLarge >(),
-         ModContent.NPCType < PerforatorTailMedium >(),
-         ModContent.NPCType < PerforatorTailMedium >(),
-         ModContent.NPCType < PerforatorTailSmall >()
-    };
-        public static int[] merge =
-        {
-        NPCID.Creeper,
-        ModContent.NPCType<AstrumDeusHead>(),
-        NPCID.TheHungry,
-        NPCID.ServantofCthulhu,
-        NPCID.EaterofWorldsHead,
-        NPCID.GolemHeadFree,
-        ModContent.NPCType<Catastrophe>(),
-        ModContent.NPCType<Cataclysm>(),
-        ModContent.NPCType<SoulSeeker>(),
-        ModContent.NPCType<SupremeCatastrophe>(),
-        ModContent.NPCType<SoulSeekerSupreme>(),
-        ModContent.NPCType<SupremeCataclysm>(),
-        ModContent.NPCType<DarkEnergy>(),
-        ModContent.NPCType<CryogenShield>(),
-        ModContent.NPCType<AnahitasIceShield>(),
-        ModContent.NPCType<PerforatorHeadSmall>(),
-        ModContent.NPCType<PerforatorHeadMedium>(),
-        ModContent.NPCType<PerforatorHeadLarge>(),
-        ModContent.NPCType<PolterPhantom>(),
-        ModContent.NPCType<RavagerHead2>(),
-        ModContent.NPCType<SplitCrimulanPaladin>(),
-        ModContent.NPCType<SplitEbonianPaladin>(),
-    };
-
-        public static int[] countsAsBoss =
-        {
-            ModContent.NPCType<ProfanedGuardianCommander>(),
-            ModContent.NPCType<ProfanedGuardianDefender>(),
-            ModContent.NPCType<ProfanedGuardianHealer>()
-        };
-
-        public static bool ShouldRecord(NPC n) => (n.boss || countsAsBoss.Contains(n.type) || replaceList.ContainsKey(n.type));
+        public static bool ShouldRecord(NPC n) => (n.boss || IDSets.ShouldTrackAsABoss[n.type] || IDSets.NpcToCountAs[n.type] > -1);
 
         public int MiscDamage = 0;
         public int mergedDamage = 0;
@@ -166,42 +32,25 @@ namespace TestingEfficiency.DamageStats
             RecordDamage(npc, damageDone, sourceData);
         }
 
-        void RecordDamage(NPC npc, int damageDone, DamageSourceData sourceData)
+        public static bool RunMerging(ref NPC npc)
         {
-            if (!((Main.npc.Any(x => ShouldRecord(x) && x.active) && merge.Contains(npc.type)) || (ShouldRecord(npc) )))
-                return;
-
-            foreach (var i in merge)
+            int type = npc.type;
+            if (IDSets.ShouldMergeInstances[npc.type])
             {
-                NPC basenpc = null;
-                if (NPC.CountNPCS(i) > 1 && npc.type == i)
-                {
-                    foreach (var NPC in Main.npc)
-                    {
-                        if (NPC.type == i)
-                        {
-                            if (basenpc is null) 
-                                basenpc = npc;
-                            if (npc.whoAmI == NPC.whoAmI)
-                            {
-                                npc = basenpc;
-                                break;
-                            }
-                        }
-                    }
-                }
+                npc = Main.npc.FirstOrDefault((x => x.type == type), npc);
             }
+
             bool merged = false;
-            if (replaceList.Keys.Contains(npc.type))
+            if (IDSets.NpcToCountAs[npc.type] != -1)
             {
-                if (merge.Contains(replaceList[npc.type]))
+                if (IDSets.ShouldMergeInstances[IDSets.NpcToCountAs[npc.type]])
                 {
                     npc = ContentSamples.NpcsByNetId[npc.type];
                 }
                 else
                     foreach (var NPC in Main.npc)
                     {
-                        if (NPC.type == replaceList[npc.type] && NPC.active)
+                        if (NPC.type == IDSets.NpcToCountAs[npc.type] && NPC.active)
                         {
                             npc = NPC;
                             merged = true;
@@ -209,9 +58,21 @@ namespace TestingEfficiency.DamageStats
                         }
                     }
             }
+            return merged;
+        }
+
+        void RecordDamage(NPC npc, int damageDone, DamageSourceData sourceData)
+        {
+
+            if (!((Main.npc.Any(x => ShouldRecord(x) && x.active) && IDSets.ShouldMergeInstances[npc.type]) || (ShouldRecord(npc))))
+                return;
+
+
+
+            bool merged = RunMerging(ref npc);
 
             var npcData = new NPCData(npc);
-            if (merge.Contains(npc.type))
+            if (IDSets.ShouldMergeInstances[npc.type])
                 npcData = new NPCData(npc.type, -1);
 
             //Try to get the existing damage dictionary for this NPC. if it doesn't exist, create a new one.
@@ -242,73 +103,25 @@ namespace TestingEfficiency.DamageStats
 
         public override void PostAI(NPC npc)
         {
-            var isFirst = true;
-            foreach (var i in merge)
-            {
-                var basenpc = new NPC();
-                if (NPC.CountNPCS(i) > 1 && npc.type == i)
-                {
-                    foreach (var NPC in Main.npc)
-                    {
-                        if (NPC.type == i)
-                        {
-                            if (basenpc == new NPC()) basenpc = npc;
-                            if (npc.whoAmI == NPC.whoAmI)
-                            {
-                                isFirst = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+            var isFirst = npc.whoAmI == (Main.npc.FirstOrDefault(x => x.whoAmI == npc.whoAmI, null)?.whoAmI ?? -1);
+            RunMerging(ref npc);
 
-            if (replaceList.Keys.Contains(npc.type))
-            {
-                if (merge.Contains(replaceList[npc.type]))
-                {
-                    npc = ContentSamples.NpcsByNetId[npc.type];
-                }
-                else
-                    foreach (var NPC in Main.npc)
-                    {
-                        if (NPC.type == replaceList[npc.type] && NPC.active)
-                        {
-                            npc = NPC;
-                            break;
-                        }
-                    }
-            }
-
-
-            if (isFirst && (npc.boss || countsAsBoss.Contains(npc.type) || merge.Contains(npc.type)) && (!blacklist.Contains(npc.type) || !replaceList.Keys.Contains(npc.type)))
+            if (isFirst && (npc.boss || IDSets.ShouldTrackAsABoss[npc.type] || IDSets.ShouldMergeInstances[npc.type]) && (!IDSets.ShouldBlacklist[npc.type]))
             {
                 //Calculate dots
                 //This entire system should be redone to match the main damage system.
-                if (Main.npc.Any(x => (x.boss || countsAsBoss.Contains(x.type)) && x.active))
+                if (TestingEfficiency.CalamityLoaded && Main.npc.Any(x => (x.boss || IDSets.ShouldTrackAsABoss[x.type]) && x.active))
                 {
                     foreach (var type in npc.buffType)
                     {
-                        var oldRegen = npc.lifeRegen;
-                        var oldCount = npc.lifeRegenCount;
-                        npc.lifeRegenCount = 0;
-                        npc.lifeRegen = 0;
-                        if (BuffDatasets.DebuffDataset[type] is not null)
-                        {
-                            var index = npc.FindBuffIndex(type);
-                            var debuffData = BuffDatasets.DebuffDataset[type];
-                            if (debuffData == null || debuffData == DebuffData.Oiled) //Oiled is done after
-                                continue;
-                            int dmg = 1;
-                            debuffData.NPCLifeRegenMethod(npc, type, ref index, ref dmg);
-                        }
 
+                        int regen = (int)TestingEfficiency.CalamityMod.Call("GetDebuffDamage", npc, type);
 
                         var npcData = new NPCData(npc);
-                        if (merge.Contains(npc.type))
+                        if (IDSets.ShouldMergeInstances[npc.type])
                             npcData = new NPCData(npc.type, -1);
 
-                        var sourceData = new DamageSourceData(-1, type,DamageSourceType.DoT);
+                        var sourceData = new DamageSourceData(-1, type, DamageSourceType.DoT);
 
                         //Try to get the existing damage dictionary for this NPC. if it doesn't exist, create a new one.
                         if (!DamageStatsSystem.DoTData.TryGetValue(npcData, out var NpcDamageDict))
@@ -317,20 +130,22 @@ namespace TestingEfficiency.DamageStats
 
                         //Add it to the NPC's dictionary
                         if (NpcDamageDict.ContainsKey(sourceData))
-                            NpcDamageDict[sourceData] += npc.lifeRegen;
+                            NpcDamageDict[sourceData] += regen;
                         else
-                            NpcDamageDict[sourceData] = npc.lifeRegen;
+                            NpcDamageDict[sourceData] = regen;
 
                         //update the parent dictionary
                         DamageStatsSystem.DoTData[npcData] = NpcDamageDict;
-
-                        npc.lifeRegen = oldRegen;
-                        npc.lifeRegenCount = oldCount;
                     }
                 }
+
+
+
+
+
                 if (npc.life != previousHP && previousHP != -1) //if their HP is different than it was last tick and last tick it wasn't -1 (aka newly spawned), we'll run this code to log the damage as a "DoT & Environment" damage source. Everything in this IF statement works the same as adding the projectile damage to the Dict, but with a fixed Damage Source string.
                 {
-                    if (!DamageStatsSystem.DamageData.TryGetValue(new NPCData(npc.type, (merge.Contains(npc.type) ? -1 : npc.whoAmI)), out var NpcDamageDict))
+                    if (!DamageStatsSystem.DamageData.TryGetValue(new NPCData(npc.type, (IDSets.ShouldMergeInstances[npc.type] ? -1 : npc.whoAmI)), out var NpcDamageDict))
                         NpcDamageDict = new() { };
 
                     if (PlayerMiscDamage.Sum() > 0)
@@ -347,7 +162,7 @@ namespace TestingEfficiency.DamageStats
                                 NpcDamageDict[sourceData] = damageToWrite;
                             else
                                 NpcDamageDict[sourceData] += damageToWrite;
-                            DamageStatsSystem.DamageData[new NPCData(npc.type, (merge.Contains(npc.type) ? -1 : npc.whoAmI))] = NpcDamageDict;
+                            DamageStatsSystem.DamageData[new NPCData(npc.type, (IDSets.ShouldMergeInstances[npc.type] ? -1 : npc.whoAmI))] = NpcDamageDict;
                             previousHP -= damageDone;
                             PlayerMiscDamage[i] = 0;
                         }
@@ -363,8 +178,8 @@ namespace TestingEfficiency.DamageStats
                         previousHP -= misc;
                         MiscDamage = 0;
                     }
-                    
-                    if (npc.life - mergedDamage != previousHP)
+
+                    if (false && npc.life - mergedDamage != previousHP)
                     {
                         var sourceData = new DamageSourceData(-1, -1, DamageSourceType.Environment);
                         if (!NpcDamageDict.ContainsKey(sourceData))

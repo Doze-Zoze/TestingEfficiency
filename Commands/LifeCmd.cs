@@ -1,13 +1,5 @@
-﻿using CalamityMod;
-using CalamityMod.Items.PermanentBoosters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria;
+﻿using Terraria;
 using Terraria.ModLoader;
-using TestingEfficiency.Helpers;
 
 namespace TestingEfficiency.Commands
 {
