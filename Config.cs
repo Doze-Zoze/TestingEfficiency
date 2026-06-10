@@ -43,6 +43,9 @@ public class FightStatsConfig : ModConfig
 
     [DefaultValue(false)]
     public bool detailedDmgStats = false;
+
+    [DefaultValue(true)]
+    public bool calamityDebuffStats = false;
     public override ConfigScope Mode => ConfigScope.ClientSide;
 }
 

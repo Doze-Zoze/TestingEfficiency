@@ -52,7 +52,7 @@ namespace TestingEfficiency.DamageStats
             );
 
         public static int[] BossKillTimes = NPCID.Sets.Factory.CreateNamedSet("CalamityMod/BossKillTimes")
-            .RegisterIntSet(-1);
+            .RegisterIntSet(0);
 
     }
 }

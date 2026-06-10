@@ -67,8 +67,7 @@ namespace TestingEfficiency.DamageStats
             if (!((Main.npc.Any(x => ShouldRecord(x) && x.active) && IDSets.ShouldMergeInstances[npc.type]) || (ShouldRecord(npc))))
                 return;
 
-
-
+            var origNPC = npc;
             bool merged = RunMerging(ref npc);
 
             var npcData = new NPCData(npc);
@@ -89,7 +88,7 @@ namespace TestingEfficiency.DamageStats
 
             //update the parent dictionary
             DamageStatsSystem.DamageData[npcData] = NpcDamageDict;
-
+            var a = npc.GetGlobalNPC<DamageStatsRecorder>().previousHP;
             //updates this NPC's previousHP variable, which I used to calculate debuff/environmental damage sources. if there's a better way to calculate debuffs, tell me plz
             npc.GetGlobalNPC<DamageStatsRecorder>().previousHP -= damageDone;
             if (merged) //Use to make sure segment dmg doesn't count as "healing"
@@ -101,41 +100,55 @@ namespace TestingEfficiency.DamageStats
 
         }
 
+        public static Func<NPC, int, int> DebuffFunc;
+
         public override void PostAI(NPC npc)
         {
             var isFirst = npc.whoAmI == (Main.npc.FirstOrDefault(x => x.whoAmI == npc.whoAmI, null)?.whoAmI ?? -1);
-            RunMerging(ref npc);
 
             if (isFirst && (npc.boss || IDSets.ShouldTrackAsABoss[npc.type] || IDSets.ShouldMergeInstances[npc.type]) && (!IDSets.ShouldBlacklist[npc.type]))
             {
-                //Calculate dots
-                //This entire system should be redone to match the main damage system.
-                if (TestingEfficiency.CalamityLoaded && Main.npc.Any(x => (x.boss || IDSets.ShouldTrackAsABoss[x.type]) && x.active))
+                //Calculate dots when enabled.
+                //Slightly laggy... but idk how to fix it.
+                if (TestingEfficiency.CalamityLoaded && FightStatsConfig.Instance.calamityDebuffStats && Main.npc.Any(x => (x.boss || IDSets.ShouldTrackAsABoss[x.type]) && x.active))
                 {
-                    foreach (var type in npc.buffType)
-                    {
+                    int countsAs = IDSets.NpcToCountAs[npc.type] >= 0 ? IDSets.NpcToCountAs[npc.type] : npc.type;
+                    bool firstOfTheMergedOnes = Main.npc.FirstOrDefault(x => IDSets.NpcToCountAs[x.type] == countsAs || x.type == countsAs).whoAmI == npc.whoAmI;
+                    if (firstOfTheMergedOnes)
+                    { 
 
-                        int regen = (int)TestingEfficiency.CalamityMod.Call("GetDebuffDamage", npc, type);
+                    var allToMerge = Main.npc.Where(x => IDSets.NpcToCountAs[x.type] == npc.type || x.type == npc.type);
+                        foreach (var NPC in allToMerge)
+                        {
+                            foreach (var type in NPC.buffType)
+                            {
 
-                        var npcData = new NPCData(npc);
-                        if (IDSets.ShouldMergeInstances[npc.type])
-                            npcData = new NPCData(npc.type, -1);
+                                if (DebuffFunc is null)
+                                    DebuffFunc = (Func<NPC, int, int>)TestingEfficiency.CalamityMod.Call("GetDebuffDamageFunction", npc, type);
 
-                        var sourceData = new DamageSourceData(-1, type, DamageSourceType.DoT);
+                                int regen = DebuffFunc(npc, type);
 
-                        //Try to get the existing damage dictionary for this NPC. if it doesn't exist, create a new one.
-                        if (!DamageStatsSystem.DoTData.TryGetValue(npcData, out var NpcDamageDict))
-                            NpcDamageDict = new() { };
+                                var npcData = new NPCData(npc);
+                                if (IDSets.ShouldMergeInstances[npc.type])
+                                    npcData = new NPCData(NPC.type, -1);
+
+                                var sourceData = new DamageSourceData(-1, type, DamageSourceType.DoT);
+
+                                //Try to get the existing damage dictionary for this NPC. if it doesn't exist, create a new one.
+                                if (!DamageStatsSystem.DoTData.TryGetValue(npcData, out var NpcDamageDict))
+                                    NpcDamageDict = new() { };
 
 
-                        //Add it to the NPC's dictionary
-                        if (NpcDamageDict.ContainsKey(sourceData))
-                            NpcDamageDict[sourceData] += regen;
-                        else
-                            NpcDamageDict[sourceData] = regen;
+                                //Add it to the NPC's dictionary
+                                if (NpcDamageDict.ContainsKey(sourceData))
+                                    NpcDamageDict[sourceData] += regen;
+                                else
+                                    NpcDamageDict[sourceData] = regen;
 
-                        //update the parent dictionary
-                        DamageStatsSystem.DoTData[npcData] = NpcDamageDict;
+                                //update the parent dictionary
+                                DamageStatsSystem.DoTData[npcData] = NpcDamageDict;
+                            }
+                        }
                     }
                 }
 
@@ -179,7 +192,7 @@ namespace TestingEfficiency.DamageStats
                         MiscDamage = 0;
                     }
 
-                    if (false && npc.life - mergedDamage != previousHP)
+                    if (npc.life - mergedDamage != previousHP)
                     {
                         var sourceData = new DamageSourceData(-1, -1, DamageSourceType.Environment);
                         if (!NpcDamageDict.ContainsKey(sourceData))
@@ -187,9 +200,11 @@ namespace TestingEfficiency.DamageStats
                         else
                             NpcDamageDict[sourceData] += previousHP - (npc.life - mergedDamage);
                     }
+                    
 
                 }
                 previousHP = npc.life;
+                mergedDamage = 0;
             }
         }
     }

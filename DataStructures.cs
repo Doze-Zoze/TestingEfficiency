@@ -25,7 +25,7 @@ namespace TestingEfficiency
             {
                 Type = type;
                 Index = index;
-                if (!IDSets.ShouldMergeInstances[type])
+                if (!IDSets.ShouldMergeInstances[type] && index >= 0)
                 {
                     Name = Main.npc[index].TypeName;
                 }

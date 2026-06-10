@@ -168,15 +168,21 @@ public class DamageStatsSystem : ModSystem
                         {
                             totalRegen += dot.Value;
                         }
-                        output += $"\n[c/78ffa3:DoT Estimates] [c/ababab:({-totalRegen / 120} dmg dealt)]";
-
-                        foreach (var dot in dotData.Value)
+                        if (totalRegen != 0)
                         {
-                            if (dot.Value == 0)
-                                continue;
-                            output += $"\n{Lang.GetBuffName(dot.Key.SourceID)}: [c/f7d57e:{((float)(dot.Value * 100) / totalRegen).ToString("0.00")}%] [c/ababab:({-dot.Value / 120} dmg)]";
-                        }
+                            var total = -totalRegen / 120;
+                            output += $"\n[c/78ffa3:DoT Estimates] [c/ababab:({total} dmg dealt)]";
 
+                            var toPrnt = dotData.Value.OrderBy(x => x.Value);
+
+                            foreach (var dot in toPrnt)
+                            {
+                                if (dot.Value == 0)
+                                    continue;
+                                var indiv = -dot.Value / 120;
+                                output += $"\n{Lang.GetBuffName(dot.Key.SourceID)}: [c/f7d57e:{(indiv / (float)total*100f).ToString("0.00")}%] [c/ababab:({indiv} dmg)]";
+                            }
+                        }
                         DoTData.Remove(dotData.Key);
                     }
                     if (lastSplits == null)

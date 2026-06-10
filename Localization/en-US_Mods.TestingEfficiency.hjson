@@ -73,6 +73,15 @@ Configs: {
 			Label: More Detailed Damage Stats
 			Tooltip: Projectiles display the projectile name instead of the item used to spawn the projectile. This applies to both chat and UI fight stats
 		}
+
+		calamityDebuffStats: {
+			Label: Show Calamity Debuff Estimates
+			Tooltip:
+				'''
+				Display estimates of debuff contribution when used with Calamity
+				May cause performance drops when enabled.
+				'''
+		}
 	}
 
 	MiscConfig: {
