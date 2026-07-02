@@ -17,12 +17,6 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CalamityMod\CalamityMod.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="SubworldLibrary">
-      <HintPath>..\..\dependencies\SubworldLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="tModLoader">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\tModLoader\tModLoader.dll</HintPath>
     </Reference>
