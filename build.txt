@@ -1,4 +1,4 @@
-displayName = Doze's Calamity Testing Efficiency (Beta)
+displayName = Doze's Testing Efficiency (Beta)
 author = dozezoze
 version = 0.9.3
 sortAfter = CalamityMod
