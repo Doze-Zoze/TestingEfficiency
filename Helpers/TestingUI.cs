@@ -1175,8 +1175,8 @@ namespace TestingEfficiency.Helpers
             {
                 item.Update(gameTime);
             }
-            ManaSlider.FillPercent = Helpers.playerManaTotal / 350f;
-            LifeSlider.FillPercent = Helpers.playerLifeTotal / 600f;
+            ManaSlider.FillPercent = Helpers.playerManaTotal / 200f;
+            LifeSlider.FillPercent = Helpers.playerLifeTotal / 500f;
             RageSlider.FillPercent = Helpers.rageBoostUsed / 3f;
             AdrenSlider.FillPercent = Helpers.adrenBoostUsed / 3f;
             CelestialOnionIcon.SetPadding(6);
@@ -1409,7 +1409,7 @@ namespace TestingEfficiency.Helpers
             addInput.OnStartTakingInput += OnStartTakingInput;
             addInput.OnEndTakingInput += OnEndTakingInput;
             addInput.OnNeedingVirtualKeyboard += OpenVirtualKeyboardWhenNeeded;
-            addInput.OnCanceledTakingInput += OnCanceledInput;
+            addInput.OnEndTakingInput += OnCanceledInput;
 
             addInput.IgnoresMouseInteraction = true;
             OnLeftClick += (evt, listen) =>
@@ -1443,7 +1443,6 @@ namespace TestingEfficiency.Helpers
             int maxInputLength = 40;
             UIVirtualKeyboard uIVirtualKeyboard = new UIVirtualKeyboard(Language.GetText("UI.PlayerNameSlot").Value, searchBarText, OnFinishedSettingName, () => addInput.ToggleTakingText(), 3, allowEmpty: true);
             uIVirtualKeyboard.SetMaxInputLength(maxInputLength);
-            uIVirtualKeyboard.CustomEscapeAttempt = EscapeVirtualKeyboard;
             IngameFancyUI.OpenUIState(uIVirtualKeyboard);
         }
         private void OnFinishedSettingName(string name)

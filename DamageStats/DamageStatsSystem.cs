@@ -31,6 +31,10 @@ public class DamageStatsSystem : ModSystem
 
     public static Dictionary<NPCData, Dictionary<DamageSourceData, int>> DamageData = new Dictionary<NPCData, Dictionary<DamageSourceData, int>>(); //This is where I store the damage data. the NPCData refers to the NPC, the String refers to the damage source, and the int is the damage amount.
 
+    /// <summary>
+    /// Used for storing the splits of various summon tag effects.
+    /// </summary>
+    public static Dictionary<NPCData, Dictionary<DamageSourceData, int>> SummonTagData = new Dictionary<NPCData, Dictionary<DamageSourceData, int>>();
     public static Dictionary<NPCData, Dictionary<DamageSourceData, int>> DoTData = new Dictionary<NPCData, Dictionary<DamageSourceData, int>>();
 
     public static List<int> HPGraphList_Boss = new List<int>();
@@ -45,7 +49,7 @@ public class DamageStatsSystem : ModSystem
 
     public static string lastSplits = null;
 
-    (string, string, string) ConstructDamageLine(KeyValuePair<DamageSourceData, int> data, int totaldmg)
+    (string, string, string) ConstructDamageLine(KeyValuePair<DamageSourceData, int> data, int totaldmg, int tagDamage = 0)
     {
         string owner = "";
         string source = "";
@@ -78,7 +82,14 @@ public class DamageStatsSystem : ModSystem
                 source = "DoT & Environment";
                 break;
         }
-        return (owner + source, $"{((float)(data.Value * 100) / totaldmg).ToString("0.00")}%", $"({data.Value} dmg)");
+
+        return (
+        owner + source,
+        $"{((float)(data.Value * 100) / totaldmg).ToString("0.00")}%",
+        tagDamage > 0 
+            ? $"({data.Value} dmg, {((tagDamage * 100) / totaldmg).ToString("0.00")}% tag)"
+            : $"({data.Value} dmg)"
+        );
 
     }
     public override void PostUpdateEverything()
@@ -155,7 +166,13 @@ public class DamageStatsSystem : ModSystem
 
                     foreach (KeyValuePair<DamageSourceData, int> i in npc.Value.OrderBy(key => -key.Value)) //Runs for each damage source, sorted from highest damage dealt to lowest damage deal
                     {
-                        var l = ConstructDamageLine(i, totaldmg);
+                        int tagDamage = 0;
+                    
+                        if (SummonTagData.ContainsKey(npc.Key) && SummonTagData[npc.Key] is Dictionary<DamageSourceData, int> npcTag && npcTag.ContainsKey(i.Key)) 
+                        {
+                            tagDamage = npcTag[i.Key];
+                        }
+                        var l = ConstructDamageLine(i, totaldmg, tagDamage);
                         output += $"\n{l.Item1}: [c/f7d57e:{l.Item2}] [c/ababab:{l.Item3}]"; //Prepare print out the damage source, the % of the total damage from that source, and the actual value of damage from that
                     }
 
@@ -193,6 +210,7 @@ public class DamageStatsSystem : ModSystem
                         lastSplits += $"\n{output}";
                     if (FightStatsConfig.Instance.dmg) Main.NewText(output); //print all the data saved before in one message
                     DamageData.Remove(npc.Key); //removes that NPC from the damage list, now that the info has been printed out
+                    SummonTagData.Remove(npc.Key);
                     DoTData.Remove(npc.Key);
                     printed = true;
                 }

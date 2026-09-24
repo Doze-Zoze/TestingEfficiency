@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Linq;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.WorldBuilding;
 using static TestingEfficiency.DataStructures;
 
 namespace TestingEfficiency.DamageStats
@@ -22,7 +24,29 @@ namespace TestingEfficiency.DamageStats
         public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
         {
             var sourceData = projectile.GetGlobalProjectile<ProjectileSourceManager>().sourceData;
-            RecordDamage(npc, damageDone, sourceData);
+            int tagDamage = 0;
+            /*if (projectile.IsMinionOrSentryRelated) //1.4.5.7 broke this and i need to fix it
+            {
+                var tag = Main.player[projectile.owner].TagEffectState;
+
+                if (tag != null && tag.IsNPCTagged(npc.whoAmI))
+                {
+                    var hm = new NPC.HitModifiers()
+                    {
+                        SourceDamage = new StatModifier(1, 1,0)
+                    };
+                    //tag.ModifyHit(projectile, npc, ref hm);
+
+                    tagDamage += damageDone - hm.GetDamage(hit.SourceDamage,hit.Crit);
+
+                    if (hit.Crit)
+                        tagDamage += damageDone / 2;
+                }
+            }*/
+
+            RecordDamage(npc, damageDone, sourceData, tagDamage);
+
+
 
         }
 
@@ -61,13 +85,14 @@ namespace TestingEfficiency.DamageStats
             return merged;
         }
 
-        void RecordDamage(NPC npc, int damageDone, DamageSourceData sourceData)
+        void RecordDamage(NPC npc, int damageDone, DamageSourceData sourceData, int tagDamage = 0)
         {
 
             if (!((Main.npc.Any(x => ShouldRecord(x) && x.active) && IDSets.ShouldMergeInstances[npc.type]) || (ShouldRecord(npc))))
                 return;
 
             var origNPC = npc;
+            int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
             bool merged = RunMerging(ref npc);
 
             var npcData = new NPCData(npc);
@@ -78,8 +103,6 @@ namespace TestingEfficiency.DamageStats
             if (!DamageStatsSystem.DamageData.TryGetValue(npcData, out var NpcDamageDict))
                 NpcDamageDict = new() { };
 
-            int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
-
             //Add it to the NPC's dictionary
             if (NpcDamageDict.ContainsKey(sourceData))
                 NpcDamageDict[sourceData] += damageToWrite;
@@ -88,6 +111,23 @@ namespace TestingEfficiency.DamageStats
 
             //update the parent dictionary
             DamageStatsSystem.DamageData[npcData] = NpcDamageDict;
+
+            if (tagDamage != 0) {
+                //Try to get the existing damage dictionary for this NPC. if it doesn't exist, create a new one.
+                if (!DamageStatsSystem.SummonTagData.TryGetValue(npcData, out var tagDict))
+                    tagDict = new() { };
+
+                //Add it to the NPC's dictionary
+                if (tagDict.ContainsKey(sourceData))
+                    tagDict[sourceData] += tagDamage;
+                else
+                    tagDict[sourceData] = tagDamage;
+
+                //update the parent dictionary
+                DamageStatsSystem.SummonTagData[npcData] = tagDict;
+            }
+
+
             var a = npc.GetGlobalNPC<DamageStatsRecorder>().previousHP;
             //updates this NPC's previousHP variable, which I used to calculate debuff/environmental damage sources. if there's a better way to calculate debuffs, tell me plz
             npc.GetGlobalNPC<DamageStatsRecorder>().previousHP -= damageDone;
@@ -115,9 +155,9 @@ namespace TestingEfficiency.DamageStats
                     int countsAs = IDSets.NpcToCountAs[npc.type] >= 0 ? IDSets.NpcToCountAs[npc.type] : npc.type;
                     bool firstOfTheMergedOnes = Main.npc.FirstOrDefault(x => IDSets.NpcToCountAs[x.type] == countsAs || x.type == countsAs).whoAmI == npc.whoAmI;
                     if (firstOfTheMergedOnes)
-                    { 
+                    {
 
-                    var allToMerge = Main.npc.Where(x => IDSets.NpcToCountAs[x.type] == npc.type || x.type == npc.type);
+                        var allToMerge = Main.npc.Where(x => IDSets.NpcToCountAs[x.type] == npc.type || x.type == npc.type);
                         foreach (var NPC in allToMerge)
                         {
                             foreach (var type in NPC.buffType)
@@ -200,7 +240,7 @@ namespace TestingEfficiency.DamageStats
                         else
                             NpcDamageDict[sourceData] += previousHP - (npc.life - mergedDamage);
                     }
-                    
+
 
                 }
                 previousHP = npc.life;

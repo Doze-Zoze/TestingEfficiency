@@ -112,6 +112,7 @@ public class WebhookManager : ModSystem
                 return;
             }
             if (image is not null)
+            try 
             {
                 byte[] imageBytes;
                 using (MemoryStream ms = new MemoryStream())
@@ -133,6 +134,10 @@ public class WebhookManager : ModSystem
                     }
                 }
             }
+            catch
+                {
+
+                }
         }
 
 
@@ -198,7 +203,7 @@ public class WebhookManager : ModSystem
         Color baseColor = _shadowColor * ((float)(int)_color.A / 255f);
         Vector2 origin = new Vector2(0f, 0f) * vector;
         Vector2 baseScale = scale ?? Vector2.One;
-        TextSnippet[] snippets = ChatManager.ParseMessage(displayText, _color).ToArray();
+        List<TextSnippet> snippets = ChatManager.ParseMessage(displayText, _color);
         ChatManager.ConvertNormalSnippets(snippets);
         DrawPanel(spriteBatch, new((int)pos.X, (int)pos.Y, (int)vector.X + 24, (int)vector.Y + 24));
         pos += new Vector2(12);

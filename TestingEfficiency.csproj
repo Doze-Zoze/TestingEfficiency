@@ -6,7 +6,7 @@
 	<!-- General -->
 	<PropertyGroup>
 		<LangVersion>latest</LangVersion>
-		<TmlVersion>stable</TmlVersion>
+		<TmlVersion>dev</TmlVersion>
 		<TargetFramework>net10.0</TargetFramework>
 		<TomatEnableMod>true</TomatEnableMod>
 		<PpebNetcoredbg>true</PpebNetcoredbg>

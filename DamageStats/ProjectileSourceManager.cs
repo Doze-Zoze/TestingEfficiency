@@ -40,7 +40,7 @@ namespace TestingEfficiency.DamageStats
                 }
                 if (s is Player)
                 {
-                    sourceData.OwnerID = s.whoAmI;
+                    sourceData.OwnerID = (s as Player).whoAmI;
                 }
                 if (s is NPC)
                 {
