@@ -170,7 +170,7 @@ namespace TestingEfficiency.DamageStats
                             var damageDone = Math.Min(PlayerMiscDamage[i], Math.Max(0, previousHP - npc.life));
                             var player = Main.player[i];
                             var sourceData = new DamageSourceData(player.whoAmI, -1, DamageSourceType.Misc);
-                            int damageToWrite = (npc.life < 0 ? damageDone + npc.life : damageDone);
+                            int damageToWrite = Math.Min(npc.life < 0 ? damageDone + npc.life : damageDone, 0);
                             if (!NpcDamageDict.ContainsKey(sourceData))
                                 NpcDamageDict[sourceData] = damageToWrite;
                             else
